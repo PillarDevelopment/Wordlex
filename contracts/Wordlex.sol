@@ -143,6 +143,83 @@ contract WordlexStaking {
     }
 
 
+    /**
+     ###################################################################################
+     ##############################  внешние методы #################################
+     ###################################################################################
+     */
+    // функция депозита
+    function deposit(address _upline) payable public {
+        _setUpline(msg.sender, _upline);
+        _deposit(msg.sender, msg.value);
+    }
+
+
+    // функция вывода
+    function withdraw() public {
+        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender); // текущий депозит и макс вывод от депозита
+
+        require(users[msg.sender].payouts < max_payout, "Full payouts"); // ывел весь депозит
+
+        // Deposit payout
+        if(to_payout > 0) {
+            if(users[msg.sender].payouts + to_payout > max_payout) {
+                to_payout = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].deposit_payouts += to_payout;
+            users[msg.sender].payouts += to_payout;
+
+            _refPayout(msg.sender, to_payout);
+        }
+
+        // Direct payout
+        if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
+            uint256 direct_bonus = users[msg.sender].direct_bonus;
+
+            if(users[msg.sender].payouts + direct_bonus > max_payout) {
+                direct_bonus = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].direct_bonus -= direct_bonus;
+            users[msg.sender].payouts += direct_bonus;
+            to_payout += direct_bonus;
+        }
+
+
+        // Match payout
+        if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
+            uint256 match_bonus = users[msg.sender].match_bonus;
+
+            if(users[msg.sender].payouts + match_bonus > max_payout) {
+                match_bonus = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].match_bonus -= match_bonus;
+            users[msg.sender].payouts += match_bonus;
+            to_payout += match_bonus;
+        }
+
+        require(to_payout > 0, "Zero payout");
+
+        users[msg.sender].total_payouts += to_payout;
+        total_withdraw += to_payout;
+
+        WDX.transfer(msg.sender, to_payout);
+
+        emit Withdraw(msg.sender, to_payout);
+
+        if(users[msg.sender].payouts >= max_payout) {
+            emit LimitReached(msg.sender, users[msg.sender].payouts);
+        }
+    }
+
+
+    /**
+    ###################################################################################
+    ##############################  внутренние методы #################################
+    ###################################################################################
+    */
     // изменение глубины линий
     function _setUpline(address _addr, address _upline) private {
         if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
@@ -216,71 +293,11 @@ contract WordlexStaking {
     }
 
 
-    function deposit(address _upline) payable public {
-        _setUpline(msg.sender, _upline);
-        _deposit(msg.sender, msg.value);
-    }
-
-
-    function withdraw() public {
-        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender); // текущий депозит и макс вывод от депозита
-
-        require(users[msg.sender].payouts < max_payout, "Full payouts"); // ывел весь депозит
-
-        // Deposit payout
-        if(to_payout > 0) {
-            if(users[msg.sender].payouts + to_payout > max_payout) {
-                to_payout = max_payout - users[msg.sender].payouts;
-            }
-
-            users[msg.sender].deposit_payouts += to_payout;
-            users[msg.sender].payouts += to_payout;
-
-            _refPayout(msg.sender, to_payout);
-        }
-
-        // Direct payout
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
-            uint256 direct_bonus = users[msg.sender].direct_bonus;
-
-            if(users[msg.sender].payouts + direct_bonus > max_payout) {
-                direct_bonus = max_payout - users[msg.sender].payouts;
-            }
-
-            users[msg.sender].direct_bonus -= direct_bonus;
-            users[msg.sender].payouts += direct_bonus;
-            to_payout += direct_bonus;
-        }
-
-
-        // Match payout
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
-            uint256 match_bonus = users[msg.sender].match_bonus;
-
-            if(users[msg.sender].payouts + match_bonus > max_payout) {
-                match_bonus = max_payout - users[msg.sender].payouts;
-            }
-
-            users[msg.sender].match_bonus -= match_bonus;
-            users[msg.sender].payouts += match_bonus;
-            to_payout += match_bonus;
-        }
-
-        require(to_payout > 0, "Zero payout");
-
-        users[msg.sender].total_payouts += to_payout;
-        total_withdraw += to_payout;
-
-        WDX.transfer(msg.sender, to_payout);
-
-        emit Withdraw(msg.sender, to_payout);
-
-        if(users[msg.sender].payouts >= max_payout) {
-            emit LimitReached(msg.sender, users[msg.sender].payouts);
-        }
-    }
-
-
+    /**
+    ###################################################################################
+    ##############################  Геттеры ###########################################
+    ###################################################################################
+    */
     // максимальный доход 300 %
     function maxPayoutOf(uint256 _amount) pure public returns(uint256) {
         return _amount * 30 / 10; // 30% для изменения цикла
@@ -301,16 +318,19 @@ contract WordlexStaking {
     }
 
 
+    // возвращает инфо по юзеру - аплайн время депозита размер депозита вывод прямой бонус матч бонус
     function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 direct_bonus, uint256 match_bonus) {
         return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].direct_bonus, users[_addr].match_bonus);
     }
 
 
+    // возвращает аггрегированную инфо по юзеру - количество рефералов депозитов выводов членов структуры
     function userInfoTotals(address _addr) view public returns(uint256 referrals, uint256 total_deposits, uint256 total_payouts, uint256 total_structure) {
         return (users[_addr].referrals, users[_addr].total_deposits, users[_addr].total_payouts, users[_addr].total_structure);
     }
 
 
+    // Возвращает агрегированную инфо - все юзеров депозитов выводов
     function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
