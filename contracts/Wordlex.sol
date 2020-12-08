@@ -79,7 +79,6 @@ contract WordlexStaking {
         uint256 referrals;
         uint256 payouts;
         uint256 direct_bonus;
-        uint256 pool_bonus;
         uint256 match_bonus;
         uint256 deposit_amount;
         uint256 deposit_payouts;
@@ -93,15 +92,8 @@ contract WordlexStaking {
     IERC20 public WDX;
 
     mapping(address => User) public users;
-
     uint256[] public cycles;
-    uint8[] public ref_bonuses;                     // 1 => 1%
-
-    uint256 public pool_cycle;
-
-
-
-    mapping(uint256 => mapping(address => uint256)) public pool_users_refs_deposits_sum;
+    uint8[] public ref_bonuses;
 
 
     uint256 public total_users = 1;
@@ -112,7 +104,6 @@ contract WordlexStaking {
     event NewDeposit(address indexed addr, uint256 amount);
     event DirectPayout(address indexed addr, address indexed from, uint256 amount);
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
-
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
@@ -121,8 +112,6 @@ contract WordlexStaking {
         owner = _owner;
         WDX = _wdx;
 
-
-        // Ежедневные комиссионные, основанные на ежедневном доходе партнеров, для каждого прямого партнера активирован 1 уровень, максимум 20 уровней, см. Ниже
         ref_bonuses.push(23);
         ref_bonuses.push(8);
         ref_bonuses.push(8);
@@ -142,7 +131,7 @@ contract WordlexStaking {
         ref_bonuses.push(30);
 
 
-        cycles.push(1e11);
+        cycles.push(15e10);
         cycles.push(3e11);
         cycles.push(9e11);
         cycles.push(2e12);
@@ -154,7 +143,7 @@ contract WordlexStaking {
     }
 
 
-    // изменение линий
+    // изменение глубины линий
     function _setUpline(address _addr, address _upline) private {
         if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
             users[_addr].upline = _upline;
@@ -177,9 +166,6 @@ contract WordlexStaking {
     // метод внесения депозита
     // проверяет доступный ввод исходя из возможного депозита по циклу
     // начисляет награду пригласившему - 10%
-    // доабвляет гаргарду в пул лидеров
-    // отправляет комиссию в фонд и админам
-    //
     function _deposit(address _addr, uint256 _amount) private {
         require(users[_addr].upline != address(0) || _addr == owner, "No upline");
 
@@ -208,7 +194,6 @@ contract WordlexStaking {
         }
 
     }
-
 
 
     // начисление реферальных вознаграждений линий в структуре
@@ -267,18 +252,6 @@ contract WordlexStaking {
             to_payout += direct_bonus;
         }
 
-        // Pool payout
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].pool_bonus > 0) {
-            uint256 pool_bonus = users[msg.sender].pool_bonus;
-
-            if(users[msg.sender].payouts + pool_bonus > max_payout) {
-                pool_bonus = max_payout - users[msg.sender].payouts;
-            }
-
-            users[msg.sender].pool_bonus -= pool_bonus;
-            users[msg.sender].payouts += pool_bonus;
-            to_payout += pool_bonus;
-        }
 
         // Match payout
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
@@ -306,9 +279,9 @@ contract WordlexStaking {
             emit LimitReached(msg.sender, users[msg.sender].payouts);
         }
     }
+
+
     // максимальный доход 300 %
-
-
     function maxPayoutOf(uint256 _amount) pure public returns(uint256) {
         return _amount * 30 / 10; // 30% для изменения цикла
     }
@@ -328,8 +301,8 @@ contract WordlexStaking {
     }
 
 
-    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 direct_bonus, uint256 pool_bonus, uint256 match_bonus) {
-        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].direct_bonus, users[_addr].pool_bonus, users[_addr].match_bonus);
+    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 direct_bonus, uint256 match_bonus) {
+        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].direct_bonus, users[_addr].match_bonus);
     }
 
 
