@@ -112,6 +112,9 @@ contract WordlexStaking {
         owner = _owner;
         WDX = _wdx;
 
+
+        // % который распределяют в линию, берется от прибыли вашего приглашенного.
+        // Пример у вас на депозите 1000 WDX 2% в день это ваша прибыль = 20 WDX
         ref_bonuses.push(23);
         ref_bonuses.push(8);
         ref_bonuses.push(8);
@@ -149,6 +152,7 @@ contract WordlexStaking {
      ###################################################################################
      */
     // функция депозита
+    // Входите в Wordlex, внеся в фонд минимум 150 WDX.
     function deposit(address _upline) payable public {
         _setUpline(msg.sender, _upline);
         _deposit(msg.sender, msg.value);
@@ -252,7 +256,7 @@ contract WordlexStaking {
             require(users[_addr].payouts >= this.maxPayoutOf(users[_addr].deposit_amount), "Deposit already exists");
             require(_amount >= users[_addr].deposit_amount && _amount <= cycles[users[_addr].cycle > cycles.length - 1 ? cycles.length - 1 : users[_addr].cycle], "Bad amount");
         }
-        else require(_amount >= 5e7 && _amount <= cycles[0], "Bad amount");
+        else require(_amount >= 15e7 && _amount < 15e10  && _amount <= cycles[0], "Bad amount");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -265,7 +269,7 @@ contract WordlexStaking {
         emit NewDeposit(_addr, _amount);
 
         if(users[_addr].upline != address(0)) {
-            users[users[_addr].upline].direct_bonus += _amount / 10; // начисление 10% прямого бонуса вышестоящему участнику - 10% Прямая комиссия
+            users[users[_addr].upline].direct_bonus += _amount / 10; // 10% Прямая комиссия от вклада
 
             emit DirectPayout(users[_addr].upline, _addr, _amount / 10);
         }
@@ -273,7 +277,8 @@ contract WordlexStaking {
     }
 
 
-    // начисление реферальных вознаграждений линий в структуре
+    // Ежедневные комиссионные, основанные на ежедневном доходе партнеров, для каждого прямого партнера активирован
+    // 1 уровень, максимум 15 уровней, см. ниже
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
@@ -281,9 +286,9 @@ contract WordlexStaking {
             if(up == address(0)) break; // не для админа
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 100; // начисление бонуса комиссионого 30-3%(20 уровней)
+                uint256 bonus = _amount * ref_bonuses[i] / 100; // начисление бонуса комиссионого  (15 уровней)
 
-                users[up].match_bonus += bonus; // здесь кучастнику происхоит сумирование бонусов в соответствие с
+                users[up].match_bonus += bonus; // здесь к участнику происхоит сумирование бонусов в соответствие с
 
                 emit MatchPayout(up, _addr, bonus);
             }
@@ -298,7 +303,8 @@ contract WordlexStaking {
     ##############################  Геттеры ###########################################
     ###################################################################################
     */
-    // максимальный доход 300 %
+    // Теперь вы имеете право получить обратно 300% от вашего ДЕПОЗИТА (пример: 1000 WDX на входе, 30 000 WDX на выходе).
+    // 300% возврат возвращается 2 способа (пассивный и через маркетинг)
     function maxPayoutOf(uint256 _amount) pure public returns(uint256) {
         return _amount * 30 / 10; // 30% для изменения цикла
     }
@@ -308,8 +314,10 @@ contract WordlexStaking {
     function payoutOf(address _addr) view external returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxPayoutOf(users[_addr].deposit_amount);
 
+        // 1% Ежедневная доходность вашего депозита (максимум 300 дней), 100% пассив.
         if(users[_addr].deposit_payouts < max_payout) {
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 100) - users[_addr].deposit_payouts; // 1% Пассив
+
+            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 100) - users[_addr].deposit_payouts;
 
             if(users[_addr].deposit_payouts + payout > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
