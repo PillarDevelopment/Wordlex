@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.5.12;
 
-interface tokenRecipient {
-    function receiveApproval(address _from, uint256 _value, address _token, bytes calldata _extraData) external;
-}
-
 contract TokenTRC20 {
     // Public variables of the token
     string public name;
     string public symbol;
     uint8 public decimals = 6;
-    // 18 decimals is the strongly suggested default, avoid changing it
+
     uint256 public totalSupply;
 
     // This creates an array with all balances
@@ -28,10 +24,10 @@ contract TokenTRC20 {
      *
      * Initializes contract with initial supply tokens to the creator of the contract
      */
-    function TokenTRC20(
+    constructor(
         uint256 initialSupply,
-        string tokenName,
-        string tokenSymbol
+        string memory tokenName,
+        string memory tokenSymbol
     ) public {
         totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
@@ -43,8 +39,7 @@ contract TokenTRC20 {
      * Internal transfer, only can be called by this contract
      */
     function _transfer(address _from, address _to, uint _value) internal {
-        // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
+
         // Check if the sender has enough
         require(balanceOf[_from] >= _value);
         // Check for overflows
@@ -103,24 +98,7 @@ contract TokenTRC20 {
         return true;
     }
 
-    /**
-     * Set allowance for other address and notify
-     *
-     * Allows `_spender` to spend no more than `_value` tokens on your behalf, and then ping the contract about it
-     *
-     * @param _spender The address authorized to spend
-     * @param _value the max amount they can spend
-     * @param _extraData some extra information to send to the approved contract
-     */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData)
-    public
-    returns (bool success) {
-        tokenRecipient spender = tokenRecipient(_spender);
-        if (approve(_spender, _value)) {
-            spender.receiveApproval(msg.sender, _value, this, _extraData);
-            return true;
-        }
-    }
+
 
     /**
      * Destroy tokens
@@ -156,7 +134,5 @@ contract TokenTRC20 {
     }
 }
 
-
 contract ProgramToken is TokenTRC20(10000000000000000, "Wordlex", "WDX") {
-
 }
