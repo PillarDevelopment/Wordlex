@@ -99,6 +99,7 @@ contract WordlexStaking {
     uint256 public total_users = 1;
     uint256 public total_deposited;
     uint256 public total_withdraw;
+    uint256 public minimumDailyPercent = 6; // 6%
 
     event Upline(address indexed addr, address indexed upline);
     event NewDeposit(address indexed addr, uint256 amount);
@@ -112,27 +113,18 @@ contract WordlexStaking {
         owner = _owner;
         WDX = _wdx;
 
-
         // % который распределяют в линию, берется от прибыли вашего приглашенного.
         // Пример у вас на депозите 1000 WDX 2% в день это ваша прибыль = 20 WDX
-        ref_bonuses.push(23);
-        ref_bonuses.push(8);
-        ref_bonuses.push(8);
-        ref_bonuses.push(8);
-        ref_bonuses.push(8);
-
-        ref_bonuses.push(9);
-        ref_bonuses.push(9);
-        ref_bonuses.push(9);
-        ref_bonuses.push(9);
-        ref_bonuses.push(9);
-
-        ref_bonuses.push(23);
-        ref_bonuses.push(23);
-        ref_bonuses.push(23);
-        ref_bonuses.push(23);
-        ref_bonuses.push(30);
-
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
+        ref_bonuses.push(2);
 
         cycles.push(15e10);
         cycles.push(3e11);
@@ -141,20 +133,18 @@ contract WordlexStaking {
     }
 
 
-    function() payable external {
-        _deposit(msg.sender, msg.value);
-    }
 
 
     /**
      ###################################################################################
-     ##############################  внешние методы #################################
+     ##############################  External          #################################
      ###################################################################################
      */
     // функция депозита
     // Входите в Wordlex, внеся в фонд минимум 150 WDX.
-    function deposit(address _upline) payable public {
+    function deposit(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
+        WDX.transferFrom(msg.sender, address(this), _amount);
         _deposit(msg.sender, msg.value);
     }
 
@@ -278,7 +268,6 @@ contract WordlexStaking {
 
 
     // Ежедневные комиссионные, основанные на ежедневном доходе партнеров, для каждого прямого партнера активирован
-    // 1 уровень, максимум 15 уровней, см. ниже
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
@@ -314,15 +303,48 @@ contract WordlexStaking {
     function payoutOf(address _addr) view external returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxPayoutOf(users[_addr].deposit_amount);
 
-        // 1% Ежедневная доходность вашего депозита (максимум 300 дней), 100% пассив.
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 100) - users[_addr].deposit_payouts;
+            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days)*getDailyPercent(_addr) / 1000) - users[_addr].deposit_payouts;
 
             if(users[_addr].deposit_payouts + payout > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
             }
         }
+    }
+
+
+    function getDailyPercent(address _addr) internal returns(uint256 _dailyPercent) {
+        _dailyPercent = minimumDailyPercent;
+        if (users[_addr].deposit_amount > 200000*1e6) {
+            _dailyPercent = minimumDailyPercent + 4;
+        }
+        if (users[_addr].deposit_amount > 100000*1e6) {
+            _dailyPercent = minimumDailyPercent + 3;
+        }
+        if (users[_addr].deposit_amount > 20000*1e6) {
+            _dailyPercent = minimumDailyPercent + 2;
+        }
+        if (users[_addr].deposit_amount > 10000*1e6) {
+            _dailyPercent = minimumDailyPercent + 1;
+        }
+
+        if (block.timestamp > users[_addr].deposit_time + 548 days) {
+            _dailyPercent = _dailyPercent + 5;
+        }
+        if (block.timestamp > users[_addr].deposit_time + 365 days) {
+            _dailyPercent = _dailyPercent + 4;
+        }
+        if (block.timestamp > users[_addr].deposit_time + 180 days) {
+            _dailyPercent = _dailyPercent + 3;
+        }
+        if (block.timestamp > users[_addr].deposit_time + 90 days) {
+            _dailyPercent = _dailyPercent + 2;
+        }
+        if (block.timestamp > users[_addr].deposit_time + 30 days) {
+            _dailyPercent = _dailyPercent + 1;
+        }
+
     }
 
 
