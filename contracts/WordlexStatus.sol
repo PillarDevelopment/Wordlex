@@ -113,6 +113,8 @@ contract WordlexStatus {
 
     IPriceController public controller;
 
+    uint8[] public ref_bonuses;
+
     mapping(address => uint256) users;
 
     constructor(address _priceController) public {
@@ -125,9 +127,20 @@ contract WordlexStatus {
         statuses.push(Status({usdPrice:3000, weeklyLimitUSD:1500, lines:7, name:"Platinum"}));
         statuses.push(Status({usdPrice:6000, weeklyLimitUSD:3000, lines:8, name:"Status"}));
         statuses.push(Status({usdPrice:10000, weeklyLimitUSD:5000, lines:10, name:"Brilliant"}));
+
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
     }
 
-    function buyStatus(uint256 _id) public payable {
+    function buyStatus(uint256 _id, address _up_liner) public payable {
         require(msg.value == getStatusPrice(_id), "Bad Amount");
         require(users[msg.sender] == 0, "Status already bought, please, upgrade");
         users[msg.sender] == _id;
@@ -135,7 +148,7 @@ contract WordlexStatus {
 
     function upgradeStatus() public payable {
         require(users[msg.sender] > 0, "Status can't upgrade, please, buy");
-        require(msg.value == getStatusPrice(_id), "Bad Amount");
+        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender])), "Bad Amount");
         users[msg.sender] == _id;
     }
 
