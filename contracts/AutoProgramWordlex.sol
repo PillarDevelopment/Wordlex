@@ -83,20 +83,22 @@ interface IWordlexStatus {
 
 }
 
-contract WordlexStaking {
+contract AutoProgramWordlex {
 
     struct User {
         address upline;
         uint256 referrals;
         uint256 payouts;
+        uint256 direct_bonus;
         uint256 match_bonus;
         uint256 deposit_amount;
         uint256 deposit_payouts;
         uint40 deposit_time;
-        uint256 withdraw_time;
         uint256 total_deposits;
         uint256 total_payouts;
         uint256 total_structure;
+        //uint256 timeOfCarSell;
+        bool statusOfCar; // true - если в програме // false - если нет
     }
 
     address payable public owner;
@@ -105,15 +107,15 @@ contract WordlexStaking {
 
     mapping(address => User) public users;
     uint8[] public ref_bonuses;
-
+    uint256 private carPriceInWDX;
 
     uint256 public total_users = 1;
     uint256 public total_deposited;
     uint256 public total_withdraw;
-    uint256 public minimumDailyPercent = 6;
 
     event Upline(address indexed addr, address indexed upline);
     event NewDeposit(address indexed addr, uint256 amount);
+    event DirectPayout(address indexed addr, address indexed from, uint256 amount);
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
@@ -123,16 +125,16 @@ contract WordlexStaking {
         WDX = _wdx;
         statusContract = _statusContract;
 
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
+        ref_bonuses.push(4); // 0,4
     }
 
 
@@ -141,20 +143,33 @@ contract WordlexStaking {
      ##############################  External          #################################
      ###################################################################################
      */
-    function deposit(address _upline, uint256 _amount)  public {
+    function buyCar(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
+        require(_amount == carPriceInWDX);
         WDX.transferFrom(msg.sender, address(this), _amount);
         _deposit(msg.sender, msg.value);
     }
 
 
     function withdraw() public {
+        // если direct_bonus = price*3 - то получает права и возможность вывода
+        // если не так - то через 1 год (без 3х друзей)
+        // если он покупает авто или открывает линию - то вознаграждение будет
+        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == carPriceInWDX && users[msg.sender].deposit_time + 15768000 < block.timestamp ) {
+            // или покупка только 1 авто 1 рефералом 1 линии
+            // если direct_bonus == 0
+            revert();
+            // его вознаграждение замораживается на 6 месяцев
+        }
+
+        if (users[msg.sender].deposit_time + 15768000 >= block.timestamp && users[msg.sender].direct_bonus == 0) {
+            // если через 6 месяцев от deposit_time он не привел рефералов - то вознаграждения идет _setUpline
+            users[users[msg.sender].upline].match_bonus += users[msg.sender].match_bonus;
+            users[msg.sender].match_bonus = 0;
+        }
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
-
-        require(users[msg.sender].withdraw_time + 604800 < block.timestamp, "Less than 7 days have passed since the last withdrawal");
-
-
+       // require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts + to_payout > max_payout) {
@@ -194,11 +209,6 @@ contract WordlexStaking {
     }
 
 
-    /**
-    ###################################################################################
-    ##############################  внутренние методы #################################
-    ###################################################################################
-    */
     function _setUpline(address _addr, address _upline) private {
         if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
             users[_addr].upline = _upline;
@@ -230,6 +240,12 @@ contract WordlexStaking {
         total_deposited += _amount;
 
         emit NewDeposit(_addr, _amount);
+
+        if(users[_addr].upline != address(0)) {
+            users[users[_addr].upline].direct_bonus += _amount*3 / 100; // 3%
+
+            emit DirectPayout(users[_addr].upline, _addr, _amount*3 / 100);
+        }
     }
 
 
@@ -240,7 +256,7 @@ contract WordlexStaking {
             if(up == address(0)) break; // не для админа
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 100;
+                uint256 bonus = _amount * ref_bonuses[i] / 1000; // 0,4% every line
 
                 users[up].match_bonus += bonus;
 
@@ -252,11 +268,6 @@ contract WordlexStaking {
     }
 
 
-    /**
-    ###################################################################################
-    ##############################  Геттеры ###########################################
-    ###################################################################################
-    */
     function maxDailyPayoutOf(address _statusHolder) pure public returns(uint256) {
         (, uint256 _dailyLimit, , ) = IWordlexStatus.getStatusMeta(IWordlexStatus.getAddressStatus(_statusHolder));
         return _dailyLimit;
@@ -277,51 +288,53 @@ contract WordlexStaking {
     }
 
 
-    function getDailyPercent(address _addr) internal returns(uint256 _dailyPercent) {
-        _dailyPercent = minimumDailyPercent;
-        if (users[_addr].deposit_amount > 200000*1e6) {
-            _dailyPercent = minimumDailyPercent + 4;
-        }
-        if (users[_addr].deposit_amount > 100000*1e6) {
-            _dailyPercent = minimumDailyPercent + 3;
-        }
-        if (users[_addr].deposit_amount > 20000*1e6) {
-            _dailyPercent = minimumDailyPercent + 2;
-        }
-        if (users[_addr].deposit_amount > 10000*1e6) {
-            _dailyPercent = minimumDailyPercent + 1;
-        }
-
-        if (block.timestamp > users[_addr].deposit_time + 548 days) {
-            _dailyPercent = _dailyPercent + 5;
-        }
-        if (block.timestamp > users[_addr].deposit_time + 365 days) {
-            _dailyPercent = _dailyPercent + 4;
-        }
-        if (block.timestamp > users[_addr].deposit_time + 180 days) {
-            _dailyPercent = _dailyPercent + 3;
-        }
-        if (block.timestamp > users[_addr].deposit_time + 90 days) {
-            _dailyPercent = _dailyPercent + 2;
-        }
-        if (block.timestamp > users[_addr].deposit_time + 30 days) {
-            _dailyPercent = _dailyPercent + 1;
-        }
+    function userInfo(address _addr) view public returns(address upline,
+                                                        uint40 deposit_time,
+                                                        uint256 deposit_amount,
+                                                        uint256 payouts,
+                                                        uint256 match_bonus,
+                                                        uint256 timeOfCarSell,
+                                                        bool statusOfCar) {
+        return (users[_addr].upline,
+                users[_addr].deposit_time,
+                users[_addr].deposit_amount,
+                users[_addr].payouts,
+                users[_addr].match_bonus,
+                users[_addr].timeOfCarSell,
+                users[_addr].statusOfCar);
     }
 
 
-    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 match_bonus) {
-        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].match_bonus);
-    }
-
-
-    function userInfoTotals(address _addr) view public returns(uint256 referrals, uint256 total_deposits, uint256 total_payouts, uint256 total_structure) {
-        return (users[_addr].referrals, users[_addr].total_deposits, users[_addr].total_payouts, users[_addr].total_structure);
+    function userInfoTotals(address _addr) view public returns(uint256 referrals,
+                                                                uint256 total_deposits,
+                                                                uint256 total_payouts,
+                                                                uint256 total_structure) {
+        return (users[_addr].referrals,
+                users[_addr].total_deposits,
+                users[_addr].total_payouts,
+                users[_addr].total_structure);
     }
 
 
     function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
+
+
+    function createCarStatus(address _addr) public {
+        require(msg.sender == owner);
+        users[_addr].timeOfCarSell = block.timestamp;
+    }
+
+
+   // function setCarStatus() public {
+   //     require(msg.sender == owner);
+   //     users[_addr].statusOfCar = true;
+   // }
+
+   // function setCarPrice(uint256 _newCarPriceInWDX) public {
+   //     require(msg.sender == owner);
+   //     carPriceInWDX = _newCarPriceInWDX;
+   // }
 
 }
