@@ -1,4 +1,6 @@
-pragma solidity 0.5.10;
+pragma solidity ^0.5.12;
+
+import "./Interfaces\IWordlexStatus.sol";
 
 interface IERC20 {
     /**
@@ -71,18 +73,27 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
+interface IWordlexStatus {
+
+    function getStatusPrice(uint256 _id) external view returns(uint256);
+
+    function getAddressStatus(address _statusHolder) external view returns(uint256);
+
+    function getStatusMeta(uint256 _statusId) external view returns(uint256 _usdPrice, uint256 _weeklyLimitUSD, uint256 _lines, string memory _name);
+
+}
+
 contract WordlexStaking {
 
     struct User {
-        uint256 cycle;
         address upline;
         uint256 referrals;
         uint256 payouts;
-        uint256 direct_bonus;
         uint256 match_bonus;
         uint256 deposit_amount;
         uint256 deposit_payouts;
         uint40 deposit_time;
+        uint256 withdraw_time;
         uint256 total_deposits;
         uint256 total_payouts;
         uint256 total_structure;
@@ -90,16 +101,16 @@ contract WordlexStaking {
 
     address payable public owner;
     IERC20 public WDX;
+    IWordlexStatus public statusContract;
 
     mapping(address => User) public users;
-    uint256[] public cycles;
     uint8[] public ref_bonuses;
 
 
     uint256 public total_users = 1;
     uint256 public total_deposited;
     uint256 public total_withdraw;
-    uint256 public minimumDailyPercent = 6; // 6%
+    uint256 public minimumDailyPercent = 6;
 
     event Upline(address indexed addr, address indexed upline);
     event NewDeposit(address indexed addr, uint256 amount);
@@ -108,13 +119,11 @@ contract WordlexStaking {
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
-
-    constructor(address payable _owner, IERC20 _wdx) public {
+    constructor(address payable _owner, IERC20 _wdx, IWordlexStatus _statusContract) public {
         owner = _owner;
         WDX = _wdx;
+        statusContract = _statusContract;
 
-        // % который распределяют в линию, берется от прибыли вашего приглашенного.
-        // Пример у вас на депозите 1000 WDX 2% в день это ваша прибыль = 20 WDX
         ref_bonuses.push(2);
         ref_bonuses.push(2);
         ref_bonuses.push(2);
@@ -125,14 +134,7 @@ contract WordlexStaking {
         ref_bonuses.push(2);
         ref_bonuses.push(2);
         ref_bonuses.push(2);
-
-        cycles.push(15e10);
-        cycles.push(3e11);
-        cycles.push(9e11);
-        cycles.push(2e12);
     }
-
-
 
 
     /**
@@ -140,8 +142,6 @@ contract WordlexStaking {
      ##############################  External          #################################
      ###################################################################################
      */
-    // функция депозита
-    // Входите в Wordlex, внеся в фонд минимум 150 WDX.
     function deposit(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
         WDX.transferFrom(msg.sender, address(this), _amount);
@@ -149,13 +149,14 @@ contract WordlexStaking {
     }
 
 
-    // функция вывода
     function withdraw() public {
-        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender); // текущий депозит и макс вывод от депозита
 
-        require(users[msg.sender].payouts < max_payout, "Full payouts"); // ывел весь депозит
+        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        // Deposit payout
+        require(users[msg.sender].withdraw_time + 604800 < block.timestamp, "Less than 7 days have passed since the last withdrawal");
+
+
+
         if(to_payout > 0) {
             if(users[msg.sender].payouts + to_payout > max_payout) {
                 to_payout = max_payout - users[msg.sender].payouts;
@@ -167,21 +168,6 @@ contract WordlexStaking {
             _refPayout(msg.sender, to_payout);
         }
 
-        // Direct payout
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
-            uint256 direct_bonus = users[msg.sender].direct_bonus;
-
-            if(users[msg.sender].payouts + direct_bonus > max_payout) {
-                direct_bonus = max_payout - users[msg.sender].payouts;
-            }
-
-            users[msg.sender].direct_bonus -= direct_bonus;
-            users[msg.sender].payouts += direct_bonus;
-            to_payout += direct_bonus;
-        }
-
-
-        // Match payout
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
             uint256 match_bonus = users[msg.sender].match_bonus;
 
@@ -198,7 +184,7 @@ contract WordlexStaking {
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-
+        users[msg.sender].withdraw_time = block.timestamp;
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
@@ -214,7 +200,6 @@ contract WordlexStaking {
     ##############################  внутренние методы #################################
     ###################################################################################
     */
-    // изменение глубины линий
     function _setUpline(address _addr, address _upline) private {
         if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
             users[_addr].upline = _upline;
@@ -234,19 +219,8 @@ contract WordlexStaking {
     }
 
 
-    // метод внесения депозита
-    // проверяет доступный ввод исходя из возможного депозита по циклу
-    // начисляет награду пригласившему - 10%
     function _deposit(address _addr, uint256 _amount) private {
         require(users[_addr].upline != address(0) || _addr == owner, "No upline");
-
-        if(users[_addr].deposit_time > 0) {
-            users[_addr].cycle++;
-
-            require(users[_addr].payouts >= this.maxPayoutOf(users[_addr].deposit_amount), "Deposit already exists");
-            require(_amount >= users[_addr].deposit_amount && _amount <= cycles[users[_addr].cycle > cycles.length - 1 ? cycles.length - 1 : users[_addr].cycle], "Bad amount");
-        }
-        else require(_amount >= 15e7 && _amount < 15e10  && _amount <= cycles[0], "Bad amount");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -257,17 +231,9 @@ contract WordlexStaking {
         total_deposited += _amount;
 
         emit NewDeposit(_addr, _amount);
-
-        if(users[_addr].upline != address(0)) {
-            users[users[_addr].upline].direct_bonus += _amount / 10; // 10% Прямая комиссия от вклада
-
-            emit DirectPayout(users[_addr].upline, _addr, _amount / 10);
-        }
-
     }
 
 
-    // Ежедневные комиссионные, основанные на ежедневном доходе партнеров, для каждого прямого партнера активирован
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
@@ -275,9 +241,9 @@ contract WordlexStaking {
             if(up == address(0)) break; // не для админа
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 100; // начисление бонуса комиссионого  (15 уровней)
+                uint256 bonus = _amount * ref_bonuses[i] / 100;
 
-                users[up].match_bonus += bonus; // здесь к участнику происхоит сумирование бонусов в соответствие с
+                users[up].match_bonus += bonus;
 
                 emit MatchPayout(up, _addr, bonus);
             }
@@ -292,16 +258,14 @@ contract WordlexStaking {
     ##############################  Геттеры ###########################################
     ###################################################################################
     */
-    // Теперь вы имеете право получить обратно 300% от вашего ДЕПОЗИТА (пример: 1000 WDX на входе, 30 000 WDX на выходе).
-    // 300% возврат возвращается 2 способа (пассивный и через маркетинг)
-    function maxPayoutOf(uint256 _amount) pure public returns(uint256) {
-        return _amount * 30 / 10; // 30% для изменения цикла
+    function maxDailyPayoutOf(address _statusHolder) pure public returns(uint256) {
+        (, uint256 _dailyLimit, , ) = IWordlexStatus.getStatusMeta(IWordlexStatus.getAddressStatus(_statusHolder));
+        return _dailyLimit;
     }
 
 
-    //возвращает текущий депозит и максимальный доход за вычетом выводов и наград для адреса
     function payoutOf(address _addr) view external returns(uint256 payout, uint256 max_payout) {
-        max_payout = this.maxPayoutOf(users[_addr].deposit_amount);
+        max_payout = this.maxDailyPayoutOf(_addr);
 
         if(users[_addr].deposit_payouts < max_payout) {
 
@@ -344,23 +308,19 @@ contract WordlexStaking {
         if (block.timestamp > users[_addr].deposit_time + 30 days) {
             _dailyPercent = _dailyPercent + 1;
         }
-
     }
 
 
-    // возвращает инфо по юзеру - аплайн время депозита размер депозита вывод прямой бонус матч бонус
-    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 direct_bonus, uint256 match_bonus) {
-        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].direct_bonus, users[_addr].match_bonus);
+    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 match_bonus) {
+        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].match_bonus);
     }
 
 
-    // возвращает аггрегированную инфо по юзеру - количество рефералов депозитов выводов членов структуры
     function userInfoTotals(address _addr) view public returns(uint256 referrals, uint256 total_deposits, uint256 total_payouts, uint256 total_structure) {
         return (users[_addr].referrals, users[_addr].total_deposits, users[_addr].total_payouts, users[_addr].total_structure);
     }
 
 
-    // Возвращает агрегированную инфо - все юзеров депозитов выводов
     function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
