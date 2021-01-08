@@ -117,6 +117,8 @@ contract WordlexStatus {
 
     mapping(address => uint256) users;
 
+    address public admin;
+
     constructor(address _priceController) public {
         controller = IPriceController(_priceController);
         statuses.push(Status({usdPrice:0, weeklyLimitUSD:0, lines:0, name:"Without Status"}));
@@ -138,19 +140,28 @@ contract WordlexStatus {
         ref_bonuses.push(5);
         ref_bonuses.push(5);
         ref_bonuses.push(5);
+        admin = msg.sender;
+        users[msg.sender] == 7;
     }
 
-    function buyStatus(uint256 _id, address _up_liner) public payable {
+    function buyStatus(uint256 _id, address payable _up_liner) public payable {
         require(msg.value == getStatusPrice(_id), "Bad Amount");
         require(users[msg.sender] == 0, "Status already bought, please, upgrade");
+        require(_up_liner != address(0) && users[_up_liner] > 0, "Upliner doesn't exist");
+        _up_liner.transfer(upliner_bonus);
+        admin.transfer(msg.value.sub(upliner_bonus));
+
         users[msg.sender] == _id;
+        uint256 upliner_bonus = msg.value.div(20);
     }
+
 
     function upgradeStatus() public payable {
         require(users[msg.sender] > 0, "Status can't upgrade, please, buy");
         require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender])), "Bad Amount");
         users[msg.sender] == _id;
     }
+
 
     function addStatus(uint256 _usdPrice,
                        uint256 _weeklyLimitUSD,
@@ -167,6 +178,19 @@ contract WordlexStatus {
 
     function withdrawStatusAmount() public onlyOwner {
         owner.transfer(address(this).balance);
+    }
+
+
+    function getAddressStatus(address _statusHolder) external view returns(uint256) {
+        return users[_statusHolder];
+    }
+
+
+    function getStatusMeta(uint256 _statusId) external view returns(uint256 _usdPrice, uint256 _weeklyLimitUSD, uint256 _lines, string memory _name) {
+        _usdPrice = statuses[_statusId].usdPrice;
+        _weeklyLimitUSD = statuses[_statusId].weeklyLimitUSD.mul(IPriceController.getCurrentUsdRate());
+        _lines = statuses[_statusId].lines;
+        _name = statuses[_statusId].name;
     }
 
 }
