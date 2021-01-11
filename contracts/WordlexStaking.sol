@@ -154,10 +154,7 @@ contract WordlexStaking {
     function withdraw() public {
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
-
         require(users[msg.sender].withdraw_time + 604800 < block.timestamp, "Less than 7 days have passed since the last withdrawal");
-
-
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts + to_payout > max_payout) {
@@ -213,7 +210,7 @@ contract WordlexStaking {
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
                 if(_upline == address(0)) break;
 
-                users[_upline].total_structure++; // увеличение структуры пригласившего
+                users[_upline].total_structure++;
 
                 _upline = users[_upline].upline;
             }
@@ -231,18 +228,16 @@ contract WordlexStaking {
         users[_addr].total_deposits += _amount;
 
         total_deposited += _amount;
-
         emit NewDeposit(_addr, _amount);
     }
 
 
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
-
         require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "Wordlex Status: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
-            if(up == address(0)) break; // не для админа
+            if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
                 uint256 bonus = _amount * ref_bonuses[i] / 100;
@@ -251,7 +246,6 @@ contract WordlexStaking {
 
                 emit MatchPayout(up, _addr, bonus);
             }
-
             up = users[up].upline;
         }
     }

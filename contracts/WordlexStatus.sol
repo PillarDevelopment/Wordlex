@@ -1,7 +1,16 @@
 pragma solidity ^0.5.12;
 
 library SafeMath {
-
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
@@ -9,10 +18,47 @@ library SafeMath {
         return c;
     }
 
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         return sub(a, b, "SafeMath: subtraction overflow");
     }
 
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
@@ -27,12 +73,73 @@ library SafeMath {
         return c;
     }
 
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
         return div(a, b, "SafeMath: division by zero");
     }
 
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
         return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts with custom message when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
     }
 }
 
@@ -97,10 +204,10 @@ interface IPriceController {
     function updateUsdRate(uint256 _newRate) external;
 
     function getCurrentUsdRate() external view returns(uint256);
-
 }
 
-contract WordlexStatus {
+contract WordlexStatus is Ownable {
+    using SafeMath for uint256;
 
     struct Status {
         uint256 usdPrice;
@@ -117,9 +224,9 @@ contract WordlexStatus {
 
     mapping(address => uint256) users;
 
-    address public admin;
+    address payable public admin;
 
-    constructor(address _priceController) public {
+    constructor(address _priceController, address payable _admin) public {
         controller = IPriceController(_priceController);
         statuses.push(Status({usdPrice:0, weeklyLimitUSD:0, lines:0, name:"Without Status"}));
         statuses.push(Status({usdPrice:10, weeklyLimitUSD:5, lines:1, name:"Test Drive"}));
@@ -140,44 +247,40 @@ contract WordlexStatus {
         ref_bonuses.push(5);
         ref_bonuses.push(5);
         ref_bonuses.push(5);
-        admin = msg.sender;
+        admin = _admin;
         users[msg.sender] == 7;
     }
+
 
     function buyStatus(uint256 _id, address payable _up_liner) public payable {
         require(msg.value == getStatusPrice(_id), "Bad Amount");
         require(users[msg.sender] == 0, "Status already bought, please, upgrade");
         require(_up_liner != address(0) && users[_up_liner] > 0, "Upliner doesn't exist");
+        uint256 upliner_bonus = msg.value.div(20);
         _up_liner.transfer(upliner_bonus);
         admin.transfer(msg.value.sub(upliner_bonus));
 
         users[msg.sender] == _id;
-        uint256 upliner_bonus = msg.value.div(20);
     }
 
 
-    function upgradeStatus() public payable {
+    function upgradeStatus(uint256 _id) public payable {
         require(users[msg.sender] > 0, "Status can't upgrade, please, buy");
         require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender])), "Bad Amount");
         users[msg.sender] == _id;
     }
 
 
-    function addStatus(uint256 _usdPrice,
-                       uint256 _weeklyLimitUSD,
-                       uint256 _lines,
-                       string _name) public onlyOwner {
+    function addStatus( uint256 _usdPrice,
+                        uint256 _weeklyLimitUSD,
+                        uint256 _lines,
+                        string memory _name) public onlyOwner {
         statuses.push(Status({usdPrice:_usdPrice, weeklyLimitUSD:_weeklyLimitUSD, lines:_lines, name:_name}));
     }
 
 
-    function getStatusPrice(uint256 _id) external view returns(uint256) {
-        return statuses[_id].mul(controller.getCurrentUsdRate());
-    }
-
-
-    function withdrawStatusAmount() public onlyOwner {
-        owner.transfer(address(this).balance);
+    function getStatusPrice(uint256 _id) public view returns(uint256) {
+        return statuses[_id].usdPrice.mul(controller.getCurrentUsdRate());
     }
 
 
@@ -185,13 +288,16 @@ contract WordlexStatus {
         return users[_statusHolder];
     }
 
+
     function getStatusUSDPrice(uint256 _statusId) external view returns(uint256) {
         return statuses[_statusId].usdPrice;
     }
 
+
     function getStatusLimit(uint256 _statusId) external view returns(uint256) {
-        return statuses[_statusId].weeklyLimitUSD.mul(IPriceController.getCurrentUsdRate());
+        return statuses[_statusId].weeklyLimitUSD.mul(controller.getCurrentUsdRate());
     }
+
 
     function getStatusLines(uint256 _statusId) external view returns(uint256) {
         return statuses[_statusId].lines;

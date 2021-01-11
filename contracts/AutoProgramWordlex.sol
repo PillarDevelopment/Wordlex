@@ -155,24 +155,17 @@ contract AutoProgramWordlex {
 
     function withdraw() public {
 
-        // если не так - то через 1 год (без 3х друзей)
-        // если он покупает авто или открывает линию - то вознаграждение будет
         if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == carPriceInWDX && users[msg.sender].deposit_time + 15768000 < block.timestamp ) {
-            // или покупка только 1 авто 1 рефералом 1 линии
-            // если direct_bonus == 0
             revert();
-            // его вознаграждение замораживается на 6 месяцев
         }
 
         if (users[msg.sender].deposit_time + 15768000 >= block.timestamp && users[msg.sender].direct_bonus == 0) {
-            // если через 6 месяцев от deposit_time он не привел рефералов - то вознаграждения идет _setUpline
             users[users[msg.sender].upline].match_bonus += users[msg.sender].match_bonus;
             users[msg.sender].match_bonus = 0;
         }
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        // если direct_bonus = price*3 - то получает права и возможность вывода
         if(users[msg.sender].direct_bonus >= carPriceInWDX*3) {
             users[msg.sender].statusOfCar = true;
         }
@@ -264,7 +257,7 @@ contract AutoProgramWordlex {
         require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "Wordlex Status: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
-            if(up == address(0)) break; // не для админа
+            if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
                 uint256 bonus = _amount * ref_bonuses[i] / 1000; // 0,4% every line
@@ -298,50 +291,33 @@ contract AutoProgramWordlex {
 
 
     function userInfo(address _addr) view public returns(address upline,
-        uint40 deposit_time,
-        uint256 deposit_amount,
-        uint256 payouts,
-        uint256 match_bonus,
-        bool statusOfCar) {
+                                                        uint40 deposit_time,
+                                                        uint256 deposit_amount,
+                                                        uint256 payouts,
+                                                        uint256 match_bonus,
+                                                        bool statusOfCar) {
         return (users[_addr].upline,
-        users[_addr].deposit_time,
-        users[_addr].deposit_amount,
-        users[_addr].payouts,
-        users[_addr].match_bonus,
-        users[_addr].statusOfCar);
+                users[_addr].deposit_time,
+                users[_addr].deposit_amount,
+                users[_addr].payouts,
+                users[_addr].match_bonus,
+                users[_addr].statusOfCar);
     }
 
 
     function userInfoTotals(address _addr) view public returns(uint256 referrals,
-        uint256 total_deposits,
-        uint256 total_payouts,
-        uint256 total_structure) {
+                                                                uint256 total_deposits,
+                                                                uint256 total_payouts,
+                                                                uint256 total_structure) {
         return (users[_addr].referrals,
-        users[_addr].total_deposits,
-        users[_addr].total_payouts,
-        users[_addr].total_structure);
+                users[_addr].total_deposits,
+                users[_addr].total_payouts,
+                users[_addr].total_structure);
     }
 
 
     function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
-
-
-    // function createCarStatus(address _addr) public {
-    //    require(msg.sender == owner);
-    //    users[_addr].timeOfCarSell = block.timestamp;
-    //    }
-
-
-    // function setCarStatus() public {
-    //     require(msg.sender == owner);
-    //     users[_addr].statusOfCar = true;
-    // }
-
-    // function setCarPrice(uint256 _newCarPriceInWDX) public {
-    //     require(msg.sender == owner);
-    //     carPriceInWDX = _newCarPriceInWDX;
-    // }
 
 }

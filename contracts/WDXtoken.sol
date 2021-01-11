@@ -2,14 +2,12 @@
 pragma solidity ^0.5.12;
 
 contract TokenTRC20 {
-    // Public variables of the token
     string public name;
     string public symbol;
     uint8 public decimals = 6;
 
     uint256 public totalSupply;
 
-    // This creates an array with all balances
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
 
@@ -134,5 +132,5 @@ contract TokenTRC20 {
     }
 }
 
-contract ProgramToken is TokenTRC20(10000000000000000, "Wordlex", "WDX") {
+contract WordlexToken is TokenTRC20(10000000000000000, "Wordlex", "WDX") {
 }
