@@ -1,7 +1,5 @@
 pragma solidity ^0.5.12;
 
-import "./Interfaces\IWordlexStatus.sol";
-
 interface IERC20 {
     /**
      * @dev Returns the amount of tokens in existence.
@@ -75,12 +73,17 @@ interface IERC20 {
 
 interface IWordlexStatus {
 
-    function getStatusPrice(uint256 _id) external view returns(uint256);
+    function getStatusPrice(uint256 _statusId) external view returns(uint256);
 
     function getAddressStatus(address _statusHolder) external view returns(uint256);
 
-    function getStatusMeta(uint256 _statusId) external view returns(uint256 _usdPrice, uint256 _weeklyLimitUSD, uint256 _lines, string memory _name);
+    function getStatusUSDPrice(uint256 _statusId) external view returns(uint256);
 
+    function getStatusLimit(uint256 _statusId) external view returns(uint256);
+
+    function getStatusLines(uint256 _statusId) external view returns(uint256);
+
+    function getStatusName(uint256 _statusId) external view returns(string memory);
 }
 
 contract WordlexStaking {
@@ -143,8 +146,8 @@ contract WordlexStaking {
      */
     function deposit(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
+        _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
-        _deposit(msg.sender, msg.value);
     }
 
 
@@ -236,6 +239,8 @@ contract WordlexStaking {
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "Wordlex Status: Unavailable lines, please, update status");
+
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break; // не для админа
 
@@ -257,13 +262,12 @@ contract WordlexStaking {
     ##############################  Геттеры ###########################################
     ###################################################################################
     */
-    function maxDailyPayoutOf(address _statusHolder) pure public returns(uint256) {
-        (, uint256 _dailyLimit, , ) = IWordlexStatus.getStatusMeta(IWordlexStatus.getAddressStatus(_statusHolder));
-        return _dailyLimit;
+    function maxDailyPayoutOf(address _statusHolder) view public returns(uint256) {
+        return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
     }
 
 
-    function payoutOf(address _addr) view external returns(uint256 payout, uint256 max_payout) {
+    function payoutOf(address _addr) external view returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxDailyPayoutOf(_addr);
 
         if(users[_addr].deposit_payouts < max_payout) {
@@ -277,7 +281,7 @@ contract WordlexStaking {
     }
 
 
-    function getDailyPercent(address _addr) internal returns(uint256 _dailyPercent) {
+    function getDailyPercent(address _addr) internal view returns(uint256 _dailyPercent) {
         _dailyPercent = minimumDailyPercent;
         if (users[_addr].deposit_amount > 200000*1e6) {
             _dailyPercent = minimumDailyPercent + 4;

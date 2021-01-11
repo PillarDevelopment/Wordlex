@@ -171,7 +171,7 @@ contract WordlexStatus {
     }
 
 
-    function getStatusPrice(uint256 _id) public view returns(uint256) {
+    function getStatusPrice(uint256 _id) external view returns(uint256) {
         return statuses[_id].mul(controller.getCurrentUsdRate());
     }
 
@@ -185,12 +185,21 @@ contract WordlexStatus {
         return users[_statusHolder];
     }
 
+    function getStatusUSDPrice(uint256 _statusId) external view returns(uint256) {
+        return statuses[_statusId].usdPrice;
+    }
 
-    function getStatusMeta(uint256 _statusId) external view returns(uint256 _usdPrice, uint256 _weeklyLimitUSD, uint256 _lines, string memory _name) {
-        _usdPrice = statuses[_statusId].usdPrice;
-        _weeklyLimitUSD = statuses[_statusId].weeklyLimitUSD.mul(IPriceController.getCurrentUsdRate());
-        _lines = statuses[_statusId].lines;
-        _name = statuses[_statusId].name;
+    function getStatusLimit(uint256 _statusId) external view returns(uint256) {
+        return statuses[_statusId].weeklyLimitUSD.mul(IPriceController.getCurrentUsdRate());
+    }
+
+    function getStatusLines(uint256 _statusId) external view returns(uint256) {
+        return statuses[_statusId].lines;
+    }
+
+
+    function getStatusName(uint256 _statusId) external view returns(string memory) {
+        return statuses[_statusId].name;
     }
 
 }

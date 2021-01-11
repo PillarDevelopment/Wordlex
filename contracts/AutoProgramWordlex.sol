@@ -75,12 +75,17 @@ interface IERC20 {
 
 interface IWordlexStatus {
 
-    function getStatusPrice(uint256 _id) external view returns(uint256);
+    function getStatusPrice(uint256 _statusId) external view returns(uint256);
 
     function getAddressStatus(address _statusHolder) external view returns(uint256);
 
-    function getStatusMeta(uint256 _statusId) external view returns(uint256 _usdPrice, uint256 _weeklyLimitUSD, uint256 _lines, string memory _name);
+    function getStatusUSDPrice(uint256 _statusId) external view returns(uint256);
 
+    function getStatusLimit(uint256 _statusId) external view returns(uint256);
+
+    function getStatusLines(uint256 _statusId) external view returns(uint256);
+
+    function getStatusName(uint256 _statusId) external view returns(string memory);
 }
 
 contract AutoProgramWordlex {
@@ -252,6 +257,8 @@ contract AutoProgramWordlex {
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
+        require(ref_bonuses.length <= availableLines, "Wordlex Status: Unavailable lines, please, update status");
+
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break; // не для админа
 
@@ -262,7 +269,6 @@ contract AutoProgramWordlex {
 
                 emit MatchPayout(up, _addr, bonus);
             }
-
             up = users[up].upline;
         }
     }
