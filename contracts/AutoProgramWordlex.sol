@@ -1,7 +1,5 @@
 pragma solidity ^0.5.12;
 
-import "./Interfaces\IWordlexStatus.sol";
-
 interface IERC20 {
     /**
      * @dev Returns the amount of tokens in existence.
@@ -151,8 +149,8 @@ contract AutoProgramWordlex {
     function buyCar(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
         require(_amount == carPriceInWDX);
+        _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
-        _deposit(msg.sender, msg.value);
     }
 
 
@@ -174,7 +172,7 @@ contract AutoProgramWordlex {
         }
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
-       // require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "Less than 6 months have passed since the last car Sell");
+        // require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts + to_payout > max_payout) {
@@ -203,7 +201,7 @@ contract AutoProgramWordlex {
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-        users[msg.sender].withdraw_time = block.timestamp;
+
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
@@ -257,7 +255,7 @@ contract AutoProgramWordlex {
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
-        require(ref_bonuses.length <= availableLines, "Wordlex Status: Unavailable lines, please, update status");
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "Wordlex Status: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break; // не для админа
@@ -274,9 +272,8 @@ contract AutoProgramWordlex {
     }
 
 
-    function maxDailyPayoutOf(address _statusHolder) pure public returns(uint256) {
-        (, uint256 _dailyLimit, , ) = IWordlexStatus.getStatusMeta(IWordlexStatus.getAddressStatus(_statusHolder));
-        return _dailyLimit;
+    function maxDailyPayoutOf(address _statusHolder) view public returns(uint256) {
+        return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
     }
 
 
@@ -285,7 +282,7 @@ contract AutoProgramWordlex {
 
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days)*getDailyPercent(_addr) / 1000) - users[_addr].deposit_payouts;
+            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days)/ 1000) - users[_addr].deposit_payouts;
 
             if(users[_addr].deposit_payouts + payout > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
@@ -327,20 +324,20 @@ contract AutoProgramWordlex {
     }
 
 
-    function createCarStatus(address _addr) public {
-        require(msg.sender == owner);
-        users[_addr].timeOfCarSell = block.timestamp;
-    }
+    // function createCarStatus(address _addr) public {
+    //    require(msg.sender == owner);
+    //    users[_addr].timeOfCarSell = block.timestamp;
+    //    }
 
 
-   // function setCarStatus() public {
-   //     require(msg.sender == owner);
-   //     users[_addr].statusOfCar = true;
-   // }
+    // function setCarStatus() public {
+    //     require(msg.sender == owner);
+    //     users[_addr].statusOfCar = true;
+    // }
 
-   // function setCarPrice(uint256 _newCarPriceInWDX) public {
-   //     require(msg.sender == owner);
-   //     carPriceInWDX = _newCarPriceInWDX;
-   // }
+    // function setCarPrice(uint256 _newCarPriceInWDX) public {
+    //     require(msg.sender == owner);
+    //     carPriceInWDX = _newCarPriceInWDX;
+    // }
 
 }
