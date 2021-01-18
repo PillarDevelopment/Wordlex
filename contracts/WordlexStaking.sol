@@ -126,16 +126,16 @@ contract WordlexStaking {
         WDX = _wdx;
         statusContract = _statusContract;
 
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
-        ref_bonuses.push(2);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
+        ref_bonuses.push(5);
     }
 
 

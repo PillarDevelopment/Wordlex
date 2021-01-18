@@ -247,15 +247,18 @@ contract WordlexStatus is Ownable {
         ref_bonuses.push(5);
         ref_bonuses.push(5);
         ref_bonuses.push(5);
+
         admin = _admin;
         users[msg.sender] == 7;
     }
 
 
     function buyStatus(uint256 _id, address payable _up_liner) public payable {
+
         require(msg.value == getStatusPrice(_id), "Bad Amount");
         require(users[msg.sender] == 0, "Status already bought, please, upgrade");
         require(_up_liner != address(0) && users[_up_liner] > 0, "Upliner doesn't exist");
+
         uint256 upliner_bonus = msg.value.div(20);
         _up_liner.transfer(upliner_bonus);
         admin.transfer(msg.value.sub(upliner_bonus));
@@ -306,6 +309,48 @@ contract WordlexStatus is Ownable {
 
     function getStatusName(uint256 _statusId) external view returns(string memory) {
         return statuses[_statusId].name;
+    }
+
+
+    function setAdminAddress(address _newAdmin) public {
+        require(msg.sender == admin);
+        admin = _newAdmin;
+    }
+
+    function _setUpline(address _addr, address _upline) private {
+        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
+            users[_addr].upline = _upline;
+            users[_upline].referrals++;
+
+            emit Upline(_addr, _upline);
+            total_users++;
+
+            for(uint8 i = 0; i < ref_bonuses.length; i++) {
+                if(_upline == address(0)) break;
+
+                users[_upline].total_structure++;
+
+                _upline = users[_upline].upline;
+            }
+        }
+    }
+
+    function _refPayout(address _addr, uint256 _amount) private {
+        address up = users[_addr].upline;
+        require(ref_bonuses.length <= getAddressStatus(_addr), "Wordlex Status: Unavailable lines, please, update status");
+
+        for(uint8 i = 0; i < ref_bonuses.length; i++) {
+            if(up == address(0)) break;
+
+            if(users[up].referrals >= i + 1) {
+                uint256 bonus = _amount * ref_bonuses[i] / 100;
+
+                users[up].match_bonus += bonus;
+
+                emit MatchPayout(up, _addr, bonus);
+            }
+            up = users[up].upline;
+        }
     }
 
 }

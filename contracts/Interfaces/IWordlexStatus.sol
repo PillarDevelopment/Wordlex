@@ -6,8 +6,6 @@ interface IWordlexStatus {
 
     function getAddressStatus(address _statusHolder) external view returns(uint256);
 
-    function getStatusPrice(uint256 _statusId) external view returns(uint256);
-
     function getStatusLimit(uint256 _statusId) external view returns(uint256);
 
     function getStatusLines(uint256 _statusId) external view returns(uint256);

@@ -100,7 +100,10 @@ contract AutoProgramWordlex {
         uint256 total_deposits;
         uint256 total_payouts;
         uint256 total_structure;
+        uint256 carPrice; // todo модификатор onlyOwner ля изменения
         bool statusOfCar; // true - если в програме // false - если нет
+        // добавить счетчик для
+        uint256 activeUsers; // кто купил машину у юзера в структуре
     }
 
     address payable public owner;
@@ -109,7 +112,6 @@ contract AutoProgramWordlex {
 
     mapping(address => User) public users;
     uint8[] public ref_bonuses;
-    uint256 private carPriceInWDX;
 
     uint256 public total_users = 1;
     uint256 public total_deposited;
@@ -155,7 +157,7 @@ contract AutoProgramWordlex {
 
     function withdraw() public {
 
-        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == carPriceInWDX && users[msg.sender].deposit_time + 15768000 < block.timestamp ) {
+        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == carPriceInWDX && users[msg.sender].deposit_time + 365 days < block.timestamp ) {
             revert();
         }
 
@@ -166,7 +168,7 @@ contract AutoProgramWordlex {
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        if(users[msg.sender].direct_bonus >= carPriceInWDX*3) {
+        if(users[msg.sender].direct_bonus >= carPriceInWDX*3) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
             users[msg.sender].statusOfCar = true;
         }
 
@@ -319,5 +321,17 @@ contract AutoProgramWordlex {
     function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
+
+
+    function setUserCarPrice(address _user, uint256 _newWDXPrice) public onlyOwner {
+        users[_addr].carPrice = _newWDXPrice;
+    }
+
+
+    //когда пользотваель сам покупает - мы делаем ему статус
+    //добавить счетчик сколько купили автомобилей в первой линии -
+    //если у него больше 1го купил - помечаем его аккаунт как активный
+    // если купил сам или купил кто то из 1й линии
+    // найти ближайший вверх activeAccount
 
 }

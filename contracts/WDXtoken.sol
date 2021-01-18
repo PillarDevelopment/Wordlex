@@ -132,5 +132,5 @@ contract TokenTRC20 {
     }
 }
 
-contract WordlexToken is TokenTRC20(10000000000000000, "Wordlex", "WDX") {
+contract WordlexToken is TokenTRC20(10000000000, "Wordlex", "WDX") {
 }
