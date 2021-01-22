@@ -1,90 +1,8 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.5.12;
 
-interface IERC20 {
-    /**
-     * @dev Returns the amount of tokens in existence.
-     */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns the amount of tokens owned by `account`.
-     */
-    function balanceOf(address account) external view returns (uint256);
-
-    /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
-     *
-     * This value changes when {approve} or {transferFrom} are called.
-     */
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
-     * allowance mechanism. `amount` is then deducted from the caller's
-     * allowance.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-interface IWordlexStatus {
-
-    function getStatusPrice(uint256 _statusId) external view returns(uint256);
-
-    function getAddressStatus(address _statusHolder) external view returns(uint256);
-
-    function getStatusUSDPrice(uint256 _statusId) external view returns(uint256);
-
-    function getStatusLimit(uint256 _statusId) external view returns(uint256);
-
-    function getStatusLines(uint256 _statusId) external view returns(uint256);
-
-    function getStatusName(uint256 _statusId) external view returns(string memory);
-}
+import  "./ITRC20.sol";
+import "./IWordlexStatus.sol";
 
 contract AutoProgramWordlex {
 
@@ -100,14 +18,13 @@ contract AutoProgramWordlex {
         uint256 total_deposits;
         uint256 total_payouts;
         uint256 total_structure;
-        uint256 carPrice; // todo модификатор onlyOwner ля изменения
-        bool statusOfCar; // true - если в програме // false - если нет
-        // добавить счетчик для
-        uint256 activeUsers; // кто купил машину у юзера в структуре
+        uint256 carPrice;
+        bool statusOfCar;
+        uint256 activeUsers; // кто купил машину у юзера в структуре // todo
     }
 
     address payable public owner;
-    IERC20 public WDX;
+    ITRC20 public WDX;
     IWordlexStatus public statusContract;
 
     mapping(address => User) public users;
@@ -124,7 +41,7 @@ contract AutoProgramWordlex {
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
-    constructor(address payable _owner, IERC20 _wdx, IWordlexStatus _statusContract) public {
+    constructor(address payable _owner, ITRC20 _wdx, IWordlexStatus _statusContract) public {
         owner = _owner;
         WDX = _wdx;
         statusContract = _statusContract;
@@ -149,7 +66,7 @@ contract AutoProgramWordlex {
      */
     function buyCar(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
-        require(_amount == carPriceInWDX);
+        require(_amount == carPriceInWDX, "AutoProgram: Incorrect amount");
         _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
     }
@@ -173,7 +90,7 @@ contract AutoProgramWordlex {
         }
 
 
-        require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "Less than 6 months have passed since the last car Sell");
+        require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "AutoProgram: Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts + to_payout > max_payout) {
@@ -198,7 +115,7 @@ contract AutoProgramWordlex {
             to_payout += match_bonus;
         }
 
-        require(to_payout > 0, "Zero payout");
+        require(to_payout > 0, "AutoProgram: Zero payout");
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
@@ -233,7 +150,7 @@ contract AutoProgramWordlex {
 
 
     function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner, "No upline");
+        require(users[_addr].upline != address(0) || _addr == owner, "AutoProgram: No upline");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -256,7 +173,7 @@ contract AutoProgramWordlex {
     function _refPayout(address _addr, uint256 _amount) private {
         address up = users[_addr].upline;
 
-        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "Wordlex Status: Unavailable lines, please, update status");
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "AutoProgram: : Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break;
