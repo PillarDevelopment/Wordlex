@@ -78,7 +78,7 @@ contract WordlexStaking is Ownable{
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts.add(to_payout)  > max_payout) {
-                to_payout = max_payout - users[msg.sender].payouts;
+                to_payout = max_payout.sub(users[msg.sender].payouts);
             }
 
             users[msg.sender].deposit_payouts += to_payout;
@@ -91,7 +91,7 @@ contract WordlexStaking is Ownable{
             uint256 match_bonus = users[msg.sender].match_bonus;
 
             if(users[msg.sender].payouts.add(match_bonus) > max_payout) {
-                match_bonus = max_payout - users[msg.sender].payouts;
+                match_bonus = max_payout.sub(users[msg.sender].payouts);
             }
 
             users[msg.sender].match_bonus -= match_bonus;
@@ -186,10 +186,10 @@ contract WordlexStaking is Ownable{
 
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount.mul((block.timestamp - users[_addr].deposit_time) / 1 days).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].deposit_payouts);
+            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time)).div(1 days)).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].deposit_payouts);
 
             if(users[_addr].deposit_payouts.add(payout) > max_payout) {
-                payout = max_payout - users[_addr].deposit_payouts;
+                payout = max_payout.sub(users[_addr].deposit_payouts);
             }
         }
     }
