@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.12;
+pragma solidity >=0.4.22 <0.8.0;
 
 contract TokenTRC20 {
     string public name;

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.12;
+pragma solidity >=0.4.22 <0.8.0;
 
 import  "./ITRC20.sol";
 import "./IWordlexStatus.sol";
+import "./Ownable.sol";
 
-contract AutoProgramWordlex {
+contract AutoProgramWordlex is Ownable {
 
     struct User {
         address upline;
@@ -23,7 +24,6 @@ contract AutoProgramWordlex {
         uint256 activeUsers; // кто купил машину у юзера в структуре // todo
     }
 
-    address payable public owner;
     ITRC20 public WDX;
     IWordlexStatus public statusContract;
 
@@ -41,8 +41,8 @@ contract AutoProgramWordlex {
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
-    constructor(address payable _owner, ITRC20 _wdx, IWordlexStatus _statusContract) public {
-        owner = _owner;
+    constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
+
         WDX = _wdx;
         statusContract = _statusContract;
 
@@ -66,7 +66,7 @@ contract AutoProgramWordlex {
      */
     function buyCar(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
-        require(_amount == carPriceInWDX, "AutoProgram: Incorrect amount");
+        require(_amount == users[msg.sender].carPrice, "AutoProgram: Incorrect amount");
         _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
     }
@@ -74,7 +74,7 @@ contract AutoProgramWordlex {
 
     function withdraw() public {
 
-        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == carPriceInWDX && users[msg.sender].deposit_time + 365 days < block.timestamp ) {
+        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == users[msg.sender].carPrice && users[msg.sender].deposit_time + 365 days < block.timestamp ) {
             revert();
         }
 
@@ -85,7 +85,7 @@ contract AutoProgramWordlex {
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        if(users[msg.sender].direct_bonus >= carPriceInWDX*3) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
+        if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice*3) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
             users[msg.sender].statusOfCar = true;
         }
 
@@ -131,7 +131,7 @@ contract AutoProgramWordlex {
 
 
     function _setUpline(address _addr, address _upline) private {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
+        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
 
@@ -150,7 +150,7 @@ contract AutoProgramWordlex {
 
 
     function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner, "AutoProgram: No upline");
+        require(users[_addr].upline != address(0) || _addr == owner(), "AutoProgram: No upline");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -241,7 +241,7 @@ contract AutoProgramWordlex {
 
 
     function setUserCarPrice(address _user, uint256 _newWDXPrice) public onlyOwner {
-        users[_addr].carPrice = _newWDXPrice;
+        users[_user].carPrice = _newWDXPrice;
     }
 
 

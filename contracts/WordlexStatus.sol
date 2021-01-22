@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.12;
+pragma solidity >=0.4.22 <0.8.0;
 
 import "./IPriceController.sol";
 import "./Ownable.sol";
@@ -15,15 +15,39 @@ contract WordlexStatus is Ownable {
         string name;
     }
 
+    struct User {
+        uint256 status;
+        address upline;
+        uint256 referrals;
+        uint256 payouts;
+        uint256 direct_bonus;
+        uint256 match_bonus;
+        uint256 deposit_amount;
+        uint256 deposit_payouts;
+        uint40 deposit_time;
+        uint256 total_deposits;
+        uint256 total_payouts;
+        uint256 total_structure;
+    }
+
     Status[] internal statuses;
 
     IPriceController public controller;
 
     uint8[] public ref_bonuses;
 
-    mapping(address => uint256) users;
+    uint256 public total_users = 1;
+
+    mapping(address => User) public users;
 
     address payable public admin;
+
+    uint256 public total_deposited;
+    uint256 public total_withdraw;
+
+    event Upline(address indexed addr, address indexed upline);
+    event MatchPayout(address indexed addr, address indexed from, uint256 amount);
+
 
     constructor(address _priceController, address payable _admin) public {
         controller = IPriceController(_priceController);
@@ -48,28 +72,28 @@ contract WordlexStatus is Ownable {
         ref_bonuses.push(5);
 
         admin = _admin;
-        users[msg.sender] == 7;
+        users[msg.sender].status == 7;
     }
 
 
     function buyStatus(uint256 _id, address payable _up_liner) public payable {
 
         require(msg.value == getStatusPrice(_id), "Bad Amount");
-        require(users[msg.sender] == 0, "Status already bought, please, upgrade");
-        require(_up_liner != address(0) && users[_up_liner] > 0, "Upliner doesn't exist");
+        require(users[msg.sender].status == 0, "Status already bought, please, upgrade");
+        require(_up_liner != address(0) && users[_up_liner].status > 0, "Upliner doesn't exist");
 
         uint256 upliner_bonus = msg.value.div(20);
         _up_liner.transfer(upliner_bonus);
         admin.transfer(msg.value.sub(upliner_bonus));
-
-        users[msg.sender] == _id;
+        _setUpline(msg.sender, _up_liner);
+        users[msg.sender].status == _id;
     }
 
 
     function upgradeStatus(uint256 _id) public payable {
-        require(users[msg.sender] > 0, "Status can't upgrade, please, buy");
-        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender])), "Bad Amount");
-        users[msg.sender] == _id;
+        require(users[msg.sender].status > 0, "Status can't upgrade, please, buy");
+        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "Bad Amount");
+        users[msg.sender].status == _id;
     }
 
 
@@ -86,8 +110,8 @@ contract WordlexStatus is Ownable {
     }
 
 
-    function getAddressStatus(address _statusHolder) external view returns(uint256) {
-        return users[_statusHolder];
+    function getAddressStatus(address _statusHolder) public view returns(uint256) {
+        return users[_statusHolder].status;
     }
 
 
@@ -111,13 +135,13 @@ contract WordlexStatus is Ownable {
     }
 
 
-    function setAdminAddress(address _newAdmin) public {
+    function setAdminAddress(address payable _newAdmin) public {
         require(msg.sender == admin);
         admin = _newAdmin;
     }
 
     function _setUpline(address _addr, address _upline) private {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
+        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
 
@@ -150,6 +174,72 @@ contract WordlexStatus is Ownable {
             }
             up = users[up].upline;
         }
+    }
+
+    function withdraw() public {
+        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
+
+        require(users[msg.sender].payouts < max_payout, "Full payouts");
+        if(to_payout > 0) {
+            if(users[msg.sender].payouts + to_payout > max_payout) {
+                to_payout = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].deposit_payouts += to_payout;
+            users[msg.sender].payouts += to_payout;
+
+            _refPayout(msg.sender, to_payout);
+        }
+
+
+        if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
+            uint256 direct_bonus = users[msg.sender].direct_bonus;
+
+            if(users[msg.sender].payouts + direct_bonus > max_payout) {
+                direct_bonus = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].direct_bonus -= direct_bonus;
+            users[msg.sender].payouts += direct_bonus;
+            to_payout += direct_bonus;
+        }
+
+        if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
+            uint256 match_bonus = users[msg.sender].match_bonus;
+
+            if(users[msg.sender].payouts + match_bonus > max_payout) {
+                match_bonus = max_payout - users[msg.sender].payouts;
+            }
+
+            users[msg.sender].match_bonus -= match_bonus;
+            users[msg.sender].payouts += match_bonus;
+            to_payout += match_bonus;
+        }
+
+        require(to_payout > 0, "Zero payout");
+
+        users[msg.sender].total_payouts += to_payout;
+        total_withdraw += to_payout;
+
+        msg.sender.transfer(to_payout);
+    }
+
+    function payoutOf(address _addr) view public returns(uint256 payout, uint256 max_payout) {
+        max_payout = this.maxPayoutOf(_addr);
+
+        if(users[_addr].deposit_payouts < max_payout) {
+            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 100)
+            + (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 500)
+            - users[_addr].deposit_payouts;
+
+            if(users[_addr].deposit_payouts + payout > max_payout) {
+                payout = max_payout - users[_addr].deposit_payouts;
+            }
+        }
+    }
+
+    function maxPayoutOf(address _addr) view public returns(uint256) {
+        return users[_addr].direct_bonus.add(users[_addr].match_bonus).add(users[_addr].deposit_amount);
     }
 
 }

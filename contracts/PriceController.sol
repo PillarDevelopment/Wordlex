@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.12;
+pragma solidity >=0.4.22 <0.8.0;
 
 import "./Ownable.sol";
-import "./IPriceController";
+import "./IPriceController.sol";
 
 contract PriceController is IPriceController, Ownable {
 
