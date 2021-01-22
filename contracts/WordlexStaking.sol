@@ -3,8 +3,12 @@ pragma solidity >=0.4.22 <0.8.0;
 
 import  "./ITRC20.sol";
 import "./IWordlexStatus.sol";
+import "./Ownable.sol";
+import "./SafeMath.sol";
 
-contract WordlexStaking {
+contract WordlexStaking is Ownable{
+    using SafeMath for uint256;
+    using SafeMath for uint40;
 
     struct User {
         address upline;
@@ -20,7 +24,6 @@ contract WordlexStaking {
         uint256 total_structure;
     }
 
-    address payable public owner;
     ITRC20 public WDX;
     IWordlexStatus public statusContract;
 
@@ -39,8 +42,7 @@ contract WordlexStaking {
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
-    constructor(address payable _owner, ITRC20 _wdx, IWordlexStatus _statusContract) public {
-        owner = _owner;
+    constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
         WDX = _wdx;
         statusContract = _statusContract;
 
@@ -72,10 +74,10 @@ contract WordlexStaking {
     function withdraw() public {
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
-        require(users[msg.sender].withdraw_time + 604800 < block.timestamp, "WordlexStaking: Less than 7 days have passed since the last withdrawal");
+        require(users[msg.sender].withdraw_time.add(7 days) < block.timestamp, "WordlexStaking: Less than 7 days have passed since the last withdrawal");
 
         if(to_payout > 0) {
-            if(users[msg.sender].payouts + to_payout > max_payout) {
+            if(users[msg.sender].payouts.add(to_payout)  > max_payout) {
                 to_payout = max_payout - users[msg.sender].payouts;
             }
 
@@ -88,7 +90,7 @@ contract WordlexStaking {
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
             uint256 match_bonus = users[msg.sender].match_bonus;
 
-            if(users[msg.sender].payouts + match_bonus > max_payout) {
+            if(users[msg.sender].payouts.add(match_bonus) > max_payout) {
                 match_bonus = max_payout - users[msg.sender].payouts;
             }
 
@@ -118,7 +120,7 @@ contract WordlexStaking {
     ###################################################################################
     */
     function _setUpline(address _addr, address _upline) private {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner && (users[_upline].deposit_time > 0 || _upline == owner)) {
+        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
 
@@ -137,7 +139,7 @@ contract WordlexStaking {
 
 
     function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner, "WordlexStaking: No upline");
+        require(users[_addr].upline != address(0) || _addr == owner(), "WordlexStaking: No upline");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -158,7 +160,7 @@ contract WordlexStaking {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 100;
+                uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
 
                 users[up].match_bonus += bonus;
 
@@ -184,9 +186,9 @@ contract WordlexStaking {
 
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days)*getDailyPercent(_addr) / 1000) - users[_addr].deposit_payouts;
+            payout = (users[_addr].deposit_amount.mul((block.timestamp - users[_addr].deposit_time) / 1 days).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].deposit_payouts);
 
-            if(users[_addr].deposit_payouts + payout > max_payout) {
+            if(users[_addr].deposit_payouts.add(payout) > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
             }
         }
@@ -195,33 +197,33 @@ contract WordlexStaking {
 
     function getDailyPercent(address _addr) internal view returns(uint256 _dailyPercent) {
         _dailyPercent = minimumDailyPercent;
-        if (users[_addr].deposit_amount > 200000*1e6) {
-            _dailyPercent = minimumDailyPercent + 4;
+        if (users[_addr].deposit_amount > 2e11) { // 200,000 WDX
+            _dailyPercent = minimumDailyPercent.add(4);
         }
-        if (users[_addr].deposit_amount > 100000*1e6) {
-            _dailyPercent = minimumDailyPercent + 3;
+        if (users[_addr].deposit_amount > 1e11) {
+            _dailyPercent = minimumDailyPercent.add(3);
         }
-        if (users[_addr].deposit_amount > 20000*1e6) {
-            _dailyPercent = minimumDailyPercent + 2;
+        if (users[_addr].deposit_amount > 2e10) {
+            _dailyPercent = minimumDailyPercent.add(2);
         }
-        if (users[_addr].deposit_amount > 10000*1e6) {
-            _dailyPercent = minimumDailyPercent + 1;
+        if (users[_addr].deposit_amount > 1e10) {
+            _dailyPercent = minimumDailyPercent.add(1);
         }
 
-        if (block.timestamp > users[_addr].deposit_time + 548 days) {
-            _dailyPercent = _dailyPercent + 5;
+        if (block.timestamp > users[_addr].deposit_time.add(548 days)) {
+            _dailyPercent = _dailyPercent.add(5);
         }
-        if (block.timestamp > users[_addr].deposit_time + 365 days) {
-            _dailyPercent = _dailyPercent + 4;
+        if (block.timestamp > users[_addr].deposit_time.add(365 days)) {
+            _dailyPercent = _dailyPercent.add(4);
         }
-        if (block.timestamp > users[_addr].deposit_time + 180 days) {
-            _dailyPercent = _dailyPercent + 3;
+        if (block.timestamp > users[_addr].deposit_time.add(180 days)) {
+            _dailyPercent = _dailyPercent.add(3);
         }
-        if (block.timestamp > users[_addr].deposit_time + 90 days) {
-            _dailyPercent = _dailyPercent + 2;
+        if (block.timestamp > users[_addr].deposit_time.add(90 days)) {
+            _dailyPercent = _dailyPercent.add(2);
         }
-        if (block.timestamp > users[_addr].deposit_time + 30 days) {
-            _dailyPercent = _dailyPercent + 1;
+        if (block.timestamp > users[_addr].deposit_time.add(30 days)) {
+            _dailyPercent = _dailyPercent.add(1);
         }
     }
 

@@ -4,8 +4,12 @@ pragma solidity >=0.4.22 <0.8.0;
 import  "./ITRC20.sol";
 import "./IWordlexStatus.sol";
 import "./Ownable.sol";
+import "./SafeMath.sol";
 
 contract AutoProgramWordlex is Ownable {
+    using SafeMath for uint;
+    using SafeMath for uint40;
+    using SafeMath for uint8;
 
     struct User {
         address upline;
@@ -42,7 +46,6 @@ contract AutoProgramWordlex is Ownable {
     event LimitReached(address indexed addr, uint256 amount);
 
     constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
-
         WDX = _wdx;
         statusContract = _statusContract;
 
@@ -74,26 +77,25 @@ contract AutoProgramWordlex is Ownable {
 
     function withdraw() public {
 
-        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == users[msg.sender].carPrice && users[msg.sender].deposit_time + 365 days < block.timestamp ) {
+        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == users[msg.sender].carPrice && users[msg.sender].deposit_time.add(365 days)  < block.timestamp ) {
             revert();
         }
 
-        if (users[msg.sender].deposit_time + 15768000 >= block.timestamp && users[msg.sender].direct_bonus == 0) {
+        if (users[msg.sender].deposit_time.add(180 days)  >= block.timestamp && users[msg.sender].direct_bonus == 0) {
             users[users[msg.sender].upline].match_bonus += users[msg.sender].match_bonus;
             users[msg.sender].match_bonus = 0;
         }
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice*3) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
+        if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
             users[msg.sender].statusOfCar = true;
         }
 
-
-        require(users[msg.sender].deposit_time + 15768000 < block.timestamp || users[msg.sender].statusOfCar == true, "AutoProgram: Less than 6 months have passed since the last car Sell");
+        require(users[msg.sender].deposit_time.add(180 days)  < block.timestamp || users[msg.sender].statusOfCar == true, "AutoProgram: Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
-            if(users[msg.sender].payouts + to_payout > max_payout) {
+            if(users[msg.sender].payouts.add(to_payout) > max_payout) {
                 to_payout = max_payout - users[msg.sender].payouts;
             }
 
@@ -106,7 +108,7 @@ contract AutoProgramWordlex is Ownable {
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
             uint256 match_bonus = users[msg.sender].match_bonus;
 
-            if(users[msg.sender].payouts + match_bonus > max_payout) {
+            if(users[msg.sender].payouts.add(match_bonus)  > max_payout) {
                 match_bonus = max_payout - users[msg.sender].payouts;
             }
 
@@ -163,9 +165,9 @@ contract AutoProgramWordlex is Ownable {
         emit NewDeposit(_addr, _amount);
 
         if(users[_addr].upline != address(0)) {
-            users[users[_addr].upline].direct_bonus += _amount*3 / 100; // 3%
+            users[users[_addr].upline].direct_bonus += _amount.mul(3).div(100); // 3%
 
-            emit DirectPayout(users[_addr].upline, _addr, _amount*3 / 100);
+            emit DirectPayout(users[_addr].upline, _addr, _amount.mul(3).div(100));
         }
     }
 
@@ -179,7 +181,7 @@ contract AutoProgramWordlex is Ownable {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 1000; // 0,4% every line
+                uint256 bonus = _amount.mul(ref_bonuses[i].div(1000)); // 0,4% every line
 
                 users[up].match_bonus += bonus;
 
@@ -200,9 +202,9 @@ contract AutoProgramWordlex is Ownable {
 
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days)/ 1000) - users[_addr].deposit_payouts;
+            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time).div(1 days)).div(1000)).sub(users[_addr].deposit_payouts));
 
-            if(users[_addr].deposit_payouts + payout > max_payout) {
+            if(users[_addr].deposit_payouts.add(payout)  > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
             }
         }

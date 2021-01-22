@@ -37,13 +37,12 @@ contract WordlexStatus is Ownable {
     uint8[] public ref_bonuses;
 
     uint256 public total_users = 1;
+    uint256 public total_deposited;
+    uint256 public total_withdraw;
 
     mapping(address => User) public users;
 
     address payable public admin;
-
-    uint256 public total_deposited;
-    uint256 public total_withdraw;
 
     event Upline(address indexed addr, address indexed upline);
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
@@ -166,7 +165,7 @@ contract WordlexStatus is Ownable {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount * ref_bonuses[i] / 100;
+                uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
 
                 users[up].match_bonus += bonus;
 
@@ -181,7 +180,7 @@ contract WordlexStatus is Ownable {
 
         require(users[msg.sender].payouts < max_payout, "Full payouts");
         if(to_payout > 0) {
-            if(users[msg.sender].payouts + to_payout > max_payout) {
+            if(users[msg.sender].payouts.add(to_payout) > max_payout) {
                 to_payout = max_payout - users[msg.sender].payouts;
             }
 
@@ -195,7 +194,7 @@ contract WordlexStatus is Ownable {
         if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
             uint256 direct_bonus = users[msg.sender].direct_bonus;
 
-            if(users[msg.sender].payouts + direct_bonus > max_payout) {
+            if(users[msg.sender].payouts.add(direct_bonus) > max_payout) {
                 direct_bonus = max_payout - users[msg.sender].payouts;
             }
 
@@ -207,7 +206,7 @@ contract WordlexStatus is Ownable {
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
             uint256 match_bonus = users[msg.sender].match_bonus;
 
-            if(users[msg.sender].payouts + match_bonus > max_payout) {
+            if(users[msg.sender].payouts.add(match_bonus) > max_payout) {
                 match_bonus = max_payout - users[msg.sender].payouts;
             }
 
@@ -228,11 +227,9 @@ contract WordlexStatus is Ownable {
         max_payout = this.maxPayoutOf(_addr);
 
         if(users[_addr].deposit_payouts < max_payout) {
-            payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 100)
-            + (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 1 days) / 500)
-            - users[_addr].deposit_payouts;
+            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time)).div(1 days)).div(100)).sub(users[_addr].deposit_payouts);
 
-            if(users[_addr].deposit_payouts + payout > max_payout) {
+            if(users[_addr].deposit_payouts.add(payout) > max_payout) {
                 payout = max_payout - users[_addr].deposit_payouts;
             }
         }
