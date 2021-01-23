@@ -12,7 +12,7 @@ contract AutoProgramWordlex is Ownable {
     using SafeMath for uint8;
 
     struct User {
-        address upline;
+        address upLine;
         uint256 referrals;
         uint256 payouts;
         uint256 direct_bonus;
@@ -24,7 +24,7 @@ contract AutoProgramWordlex is Ownable {
         uint256 total_payouts;
         uint256 total_structure;
         uint256 carPrice;
-        bool statusOfCar;
+        bool statusOfCar; // activeAccount
         uint256 activeUsers; // кто купил машину у юзера в структуре // todo
     }
 
@@ -32,6 +32,7 @@ contract AutoProgramWordlex is Ownable {
     IWordlexStatus public statusContract;
 
     mapping(address => User) public users;
+    address[address] public ids;
     uint8[] public ref_bonuses;
 
     uint256 public total_users = 1;
@@ -69,9 +70,10 @@ contract AutoProgramWordlex is Ownable {
      */
     function buyCar(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
-        require(_amount == users[msg.sender].carPrice, "AutoProgram: Incorrect amount");
+        require(_amount == users[msg.sender].carPrice && users[msg.sender].carPrice != 0, "AutoProgram: Invalid amount or carPrice isn't determined");
         _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
+        users[msg.sender].statusOfCar = true;
     }
 
 
@@ -82,15 +84,15 @@ contract AutoProgramWordlex is Ownable {
         }
 
         if (users[msg.sender].deposit_time.add(180 days)  >= block.timestamp && users[msg.sender].direct_bonus == 0) {
-            users[users[msg.sender].upline].match_bonus += users[msg.sender].match_bonus;
+            users[users[msg.sender].upLine].match_bonus += users[msg.sender].match_bonus;
             users[msg.sender].match_bonus = 0;
         }
 
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
-            users[msg.sender].statusOfCar = true;
-        }
+      //  if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
+      //      users[msg.sender].statusOfCar = true;
+      //  }
 
         require(users[msg.sender].deposit_time.add(180 days)  < block.timestamp || users[msg.sender].statusOfCar == true, "AutoProgram: Less than 6 months have passed since the last car Sell");
 
@@ -121,7 +123,7 @@ contract AutoProgramWordlex is Ownable {
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-
+        WDX.transfer(_findInactiveAccount(msg.sender));
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
@@ -132,27 +134,41 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function _setUpline(address _addr, address _upline) private {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
-            users[_addr].upline = _upline;
-            users[_upline].referrals++;
+    function _findInactiveAccount(address _addr) internal returns(address inactiveAccount, uint256 amount) {
+        inactiveAccount = address(this);
+        // найти ближайший нижестоящий active.accaunt == false && total.structure = 0 && depositTime + 6 mounts < now
+        for(uint256 i = 0; i < ids.length; i++) {
+            if (users[]) {
 
-            emit Upline(_addr, _upline);
+            }
+        }
+
+        amount = 0;
+    }
+
+
+    function _setUpline(address _addr, address _upLine) private {
+        if(users[_addr].upLine == address(0) && _upLine != _addr && _addr != owner() && (users[_upLine].deposit_time > 0 || _upLine == owner())) {
+            users[_addr].upLine = _upLine;
+            users[_upLine].referrals++;
+
+            emit Upline(_addr, _upLine);
             total_users++;
+            ids.push(_addr);
 
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
-                if(_upline == address(0)) break;
+                if(_upLine == address(0)) break;
 
-                users[_upline].total_structure++;
+                users[_upLine].total_structure++;
 
-                _upline = users[_upline].upline;
+                _upLine = users[_upLine].upLine;
             }
         }
     }
 
 
     function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner(), "AutoProgram: No upline");
+        require(users[_addr].upline != address(0) || _addr == owner(), "AutoProgram: No upLine");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -165,7 +181,7 @@ contract AutoProgramWordlex is Ownable {
         emit NewDeposit(_addr, _amount);
 
         if(users[_addr].upline != address(0)) {
-            users[users[_addr].upline].direct_bonus += _amount.mul(3).div(100); // 3%
+            users[users[_addr].upline].direct_bonus += _amount.mul(3).div(100);
 
             emit DirectPayout(users[_addr].upline, _addr, _amount.mul(3).div(100));
         }
@@ -173,9 +189,9 @@ contract AutoProgramWordlex is Ownable {
 
 
     function _refPayout(address _addr, uint256 _amount) private {
-        address up = users[_addr].upline;
+        address up = users[_addr].upLine;
 
-        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "AutoProgram: : Unavailable lines, please, update status");
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "AutoProgram: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break;
@@ -187,13 +203,13 @@ contract AutoProgramWordlex is Ownable {
 
                 emit MatchPayout(up, _addr, bonus);
             }
-            up = users[up].upline;
+            up = users[up].upLine;
         }
     }
 
 
-    function maxDailyPayoutOf(address _statusHolder) view public returns(uint256) {
-        return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
+    function maxDailyPayoutOf(address _addr) view public returns(uint256) {
+        return statusContract.getStatusLimit(statusContract.getAddressStatus(_addr));
     }
 
 
@@ -217,7 +233,7 @@ contract AutoProgramWordlex is Ownable {
                                                         uint256 payouts,
                                                         uint256 match_bonus,
                                                         bool statusOfCar) {
-        return (users[_addr].upline,
+        return (users[_addr].upLine,
                 users[_addr].deposit_time,
                 users[_addr].deposit_amount,
                 users[_addr].payouts,
@@ -242,8 +258,8 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function setUserCarPrice(address _user, uint256 _newWDXPrice) public onlyOwner {
-        users[_user].carPrice = _newWDXPrice;
+    function setUserCarPrice(address _addr, uint256 _newWDXPrice) public onlyOwner {
+        users[_addr].carPrice = _newWDXPrice;
     }
 
 
