@@ -25,14 +25,15 @@ contract AutoProgramWordlex is Ownable {
         uint256 total_structure;
         uint256 carPrice;
         bool statusOfCar; // activeAccount
-        uint256 activeUsers; // кто купил машину у юзера в структуре // todo
+        //uint256 activeUsers; // кто купил машину у юзера в структуре // todo
+        uint256 [] firstLineIds;
     }
 
     ITRC20 public WDX;
     IWordlexStatus public statusContract;
 
     mapping(address => User) public users;
-    address[address] public ids;
+    address[] public ids;
     uint8[] public ref_bonuses;
 
     uint256 public total_users = 1;
@@ -123,7 +124,8 @@ contract AutoProgramWordlex is Ownable {
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-        WDX.transfer(_findInactiveAccount(msg.sender));
+        (address inactiveAccount, uint256 _inactiveAmount) = _findInactiveAccount(msg.sender);
+        WDX.transfer(inactiveAccount, _inactiveAmount);
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
@@ -137,12 +139,10 @@ contract AutoProgramWordlex is Ownable {
     function _findInactiveAccount(address _addr) internal returns(address inactiveAccount, uint256 amount) {
         inactiveAccount = address(this);
         // найти ближайший нижестоящий active.accaunt == false && total.structure = 0 && depositTime + 6 mounts < now
-        for(uint256 i = 0; i < ids.length; i++) {
-            if (users[]) {
-
-            }
-        }
-
+      //  for(uint256 i = 0; i < ids.length; i++) {
+      //      if (users[]) {
+            //}
+        //}
         amount = 0;
     }
 
@@ -155,6 +155,7 @@ contract AutoProgramWordlex is Ownable {
             emit Upline(_addr, _upLine);
             total_users++;
             ids.push(_addr);
+            users[_upLine].firstLineIds.push(ids.length);
 
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
                 if(_upLine == address(0)) break;
@@ -168,7 +169,7 @@ contract AutoProgramWordlex is Ownable {
 
 
     function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner(), "AutoProgram: No upLine");
+        require(users[_addr].upLine != address(0) || _addr == owner(), "AutoProgram: No upLine");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -180,10 +181,10 @@ contract AutoProgramWordlex is Ownable {
 
         emit NewDeposit(_addr, _amount);
 
-        if(users[_addr].upline != address(0)) {
-            users[users[_addr].upline].direct_bonus += _amount.mul(3).div(100);
+        if(users[_addr].upLine != address(0)) {
+            users[users[_addr].upLine].direct_bonus += _amount.mul(3).div(100);
 
-            emit DirectPayout(users[_addr].upline, _addr, _amount.mul(3).div(100));
+            emit DirectPayout(users[_addr].upLine, _addr, _amount.mul(3).div(100));
         }
     }
 
