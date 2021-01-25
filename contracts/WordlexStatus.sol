@@ -87,7 +87,7 @@ contract WordlexStatus is Ownable {
         admin.transfer(msg.value.sub(upliner_bonus));
         _setUpline(msg.sender, _up_liner);
         users[msg.sender].status == _id;
-
+        // every 10 direct bonuses
         if(_up_liner != address(0) ) {
             users[_up_liner].direct_bonus += msg.value.mul(5).div(100);
             emit DirectPayout(_up_liner, msg.sender, msg.value.mul(5).div(100));
