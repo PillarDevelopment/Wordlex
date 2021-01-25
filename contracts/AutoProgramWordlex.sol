@@ -26,7 +26,7 @@ contract AutoProgramWordlex is Ownable {
         uint256 carPrice;
         bool statusOfCar; // activeAccount
         //uint256 activeUsers; // кто купил машину у юзера в структуре // todo
-        uint256 [] firstLineIds;
+        uint256[] firstLineIds;
     }
 
     ITRC20 public WDX;
@@ -136,14 +136,26 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function _findInactiveAccount(address _addr) internal returns(address inactiveAccount, uint256 amount) {
-        inactiveAccount = address(this);
-        // найти ближайший нижестоящий active.accaunt == false && total.structure = 0 && depositTime + 6 mounts < now
-      //  for(uint256 i = 0; i < ids.length; i++) {
-      //      if (users[]) {
-            //}
-        //}
-        amount = 0;
+    function _findInactiveAccount(address _addr) public view returns(address inactiveAccount, uint256 amount) {
+        inactiveAccount;
+        for(uint256 i = 0; i < users[_addr].firstLineIds.length; i++) {
+            if(users[ids[users[_addr].firstLineIds[i]]].statusOfCar == false &&
+            users[ids[users[_addr].firstLineIds[i]]].total_structure == 0 &&
+                users[ids[users[_addr].firstLineIds[i]]].deposit_time.add(180 days) < now &&
+                users[ids[users[_addr].firstLineIds[i]]].deposit_amount != 0) {
+                inactiveAccount = ids[users[_addr].firstLineIds[i]];
+            }
+            else {
+            inactiveAccount = address(0x0);
+            //for (uint256 i = 0; i < users[_addr].firstLineIds.length; i++) { // длина первой линии
+                // заходим в первую линию первой линии
+            }
+               // for (uint256 y = 0; y < users[ids[users[_addr].firstLineIds[i]]].firstLineIds.length; y++) {
+               //
+               // }
+            //  }
+        }
+        amount = users[inactiveAccount].deposit_amount;
     }
 
 
@@ -178,12 +190,12 @@ contract AutoProgramWordlex is Ownable {
         users[_addr].total_deposits += _amount;
 
         total_deposited += _amount;
-
         emit NewDeposit(_addr, _amount);
 
-        if(users[_addr].upLine != address(0)) {
+        if(users[_addr].upLine != address(0) ) {
+            // за каждые 10 купивших статусы в 1 линии, 5% от суммы купленных статусов. (Не важно какой статус был куплен)
+            // накопить директ за 10 и начислить если это 10 20 и более статус
             users[users[_addr].upLine].direct_bonus += _amount.mul(3).div(100);
-
             emit DirectPayout(users[_addr].upLine, _addr, _amount.mul(3).div(100));
         }
     }
@@ -201,7 +213,6 @@ contract AutoProgramWordlex is Ownable {
                 uint256 bonus = _amount.mul(ref_bonuses[i].div(1000)); // 0,4% every line
 
                 users[up].match_bonus += bonus;
-
                 emit MatchPayout(up, _addr, bonus);
             }
             up = users[up].upLine;

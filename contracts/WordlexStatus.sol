@@ -16,18 +16,19 @@ contract WordlexStatus is Ownable {
     }
 
     struct User {
-        uint256 status;
-        address upline;
+        uint40 deposit_time;
+        uint40 currentDirectUsers;
+        uint40 status;
         uint256 referrals;
         uint256 payouts;
         uint256 direct_bonus;
         uint256 match_bonus;
         uint256 deposit_amount;
         uint256 deposit_payouts;
-        uint40 deposit_time;
         uint256 total_deposits;
         uint256 total_payouts;
         uint256 total_structure;
+        address upline;
     }
 
     Status[] internal statuses;
@@ -46,7 +47,7 @@ contract WordlexStatus is Ownable {
 
     event Upline(address indexed addr, address indexed upline);
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
-
+    event DirectPayout(address indexed addr, address indexed from, uint256 amount);
 
     constructor(address _priceController, address payable _admin) public {
         controller = IPriceController(_priceController);
@@ -86,6 +87,18 @@ contract WordlexStatus is Ownable {
         admin.transfer(msg.value.sub(upliner_bonus));
         _setUpline(msg.sender, _up_liner);
         users[msg.sender].status == _id;
+
+        if(_up_liner != address(0) ) {
+            users[_up_liner].direct_bonus += msg.value.mul(5).div(100);
+            emit DirectPayout(_up_liner, msg.sender, msg.value.mul(5).div(100));
+            users[_up_liner].currentDirectUsers++;
+
+            if (users[_up_liner].currentDirectUsers == 10) {
+                _up_liner.transfer(users[_up_liner].direct_bonus);
+                users[_up_liner].direct_bonus = 0;
+                users[_up_liner].currentDirectUsers = 0;
+            }
+        }
     }
 
 
@@ -149,9 +162,7 @@ contract WordlexStatus is Ownable {
 
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
                 if(_upline == address(0)) break;
-
                 users[_upline].total_structure++;
-
                 _upline = users[_upline].upline;
             }
         }
@@ -168,7 +179,6 @@ contract WordlexStatus is Ownable {
                 uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
 
                 users[up].match_bonus += bonus;
-
                 emit MatchPayout(up, _addr, bonus);
             }
             up = users[up].upline;
@@ -188,19 +198,6 @@ contract WordlexStatus is Ownable {
             users[msg.sender].payouts += to_payout;
 
             _refPayout(msg.sender, to_payout);
-        }
-
-
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].direct_bonus > 0) {
-            uint256 direct_bonus = users[msg.sender].direct_bonus;
-
-            if(users[msg.sender].payouts.add(direct_bonus) > max_payout) {
-                direct_bonus = max_payout.sub(users[msg.sender].payouts);
-            }
-
-            users[msg.sender].direct_bonus -= direct_bonus;
-            users[msg.sender].payouts += direct_bonus;
-            to_payout += direct_bonus;
         }
 
         if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
