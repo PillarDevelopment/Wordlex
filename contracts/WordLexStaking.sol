@@ -2,11 +2,11 @@
 pragma solidity >=0.4.22 <0.8.0;
 
 import  "./ITRC20.sol";
-import "./IWordlexStatus.sol";
+import "./IWordLexStatus.sol";
 import "./Ownable.sol";
 import "./SafeMath.sol";
 
-contract WordlexStaking is Ownable{
+contract WordLexStaking is Ownable{
     using SafeMath for uint256;
     using SafeMath for uint40;
 
@@ -25,7 +25,7 @@ contract WordlexStaking is Ownable{
     }
 
     ITRC20 public WDX;
-    IWordlexStatus public statusContract;
+    IWordLexStatus public statusContract;
 
     mapping(address => User) public users;
     uint8[] public ref_bonuses;
@@ -42,7 +42,7 @@ contract WordlexStaking is Ownable{
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
 
-    constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
+    constructor(ITRC20 _wdx, IWordLexStatus _statusContract) public {
         WDX = _wdx;
         statusContract = _statusContract;
 

@@ -2,11 +2,11 @@
 pragma solidity >=0.4.22 <0.8.0;
 
 import  "./ITRC20.sol";
-import "./IWordlexStatus.sol";
+import "./IWordLexStatus.sol";
 import "./Ownable.sol";
 import "./SafeMath.sol";
 
-contract AutoProgramWordlex is Ownable {
+contract AutoProgramWordLex is Ownable {
     using SafeMath for uint256;
     using SafeMath for uint40;
     using SafeMath for uint8;
@@ -24,12 +24,12 @@ contract AutoProgramWordlex is Ownable {
         uint256 total_payouts;
         uint256 total_structure;
         uint256 carPrice;
-        bool statusOfCar; // activeAccount
+        bool statusOfCar;
         uint256[] firstLineIds;
     }
 
-    ITRC20 public WDX;
-    IWordlexStatus public statusContract;
+    ITRC20 public WDXToken;
+    IWordLexStatus public statusContract;
 
     mapping(address => User) public users;
     address[] public ids;
@@ -47,8 +47,8 @@ contract AutoProgramWordlex is Ownable {
     event LimitReached(address indexed addr, uint256 amount);
     event LiquidatedInactive(address indexed inactiveAccount, address indexed liquidator, uint256 amount);
 
-    constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
-        WDX = _wdx;
+    constructor(ITRC20 _wdxToken, IWordLexStatus _statusContract) public {
+        WDXToken = _wdxToken;
         statusContract = _statusContract;
 
         ref_bonuses.push(4); // 0,4
@@ -71,10 +71,11 @@ contract AutoProgramWordlex is Ownable {
      */
     function buyCar(uint256 _amount)  public {
 
-        require(_amount == users[msg.sender].carPrice && users[msg.sender].carPrice != 0, "AutoProgram: Invalid amount or carPrice isn't determined");
+        require(_amount == users[msg.sender].carPrice && users[msg.sender].carPrice != 0,
+                    "AutoProgramWDX: Invalid amount or carPrice isn't determined");
         require(users[msg.sender].upLine != address(0x0), "AutoProgramWDX: Address not registered");
         _deposit(msg.sender, _amount);
-        WDX.transferFrom(msg.sender, address(this), _amount);
+        WDXToken.transferFrom(msg.sender, address(this), _amount);
         users[msg.sender].statusOfCar = true;
     }
 
@@ -103,7 +104,8 @@ contract AutoProgramWordlex is Ownable {
       //      users[msg.sender].statusOfCar = true;
       //  }
 
-        require(users[msg.sender].deposit_time.add(180 days)  < block.timestamp || users[msg.sender].statusOfCar == true, "AutoProgram: Less than 6 months have passed since the last car Sell");
+        require(users[msg.sender].deposit_time.add(180 days)  < block.timestamp || users[msg.sender].statusOfCar == true,
+                                "AutoProgramWDX: Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts.add(to_payout) > max_payout) {
@@ -122,18 +124,16 @@ contract AutoProgramWordlex is Ownable {
             if(users[msg.sender].payouts.add(match_bonus)  > max_payout) {
                 match_bonus = max_payout.sub(users[msg.sender].payouts);
             }
-
             users[msg.sender].match_bonus -= match_bonus;
             users[msg.sender].payouts += match_bonus;
             to_payout += match_bonus;
         }
 
-        require(to_payout > 0, "AutoProgram: Zero payout");
-
+        require(to_payout > 0, "AutoProgramWDX: Zero payout");
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
 
-        WDX.transfer(msg.sender, to_payout);
+        WDXToken.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
         if(users[msg.sender].payouts >= max_payout) {
@@ -142,18 +142,20 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function liquidateInactiveAccount(address inactiveAccount) public {
-        require(users[inactiveAccount].statusOfCar == false && users[inactiveAccount].total_structure == 0 &&
-            users[inactiveAccount].deposit_time.add(180 days) < now &&
-            users[inactiveAccount].deposit_amount != 0, "AutoProgramWDX: This address isn't inactive or not available");
+    function liquidateInactiveAccount(address inactiveAccount) external {
+        require(users[msg.sender].statusOfCar == true, "AutoProgramWDX: Sender is not Active Account");
+        require(users[inactiveAccount].statusOfCar == false, "AutoProgramWDX: This address bought a car");
+        require(users[inactiveAccount].total_structure == 0, "AutoProgramWDX: This address have a structure");
+        require( users[inactiveAccount].deposit_time.add(180 days) < now);
+        require(users[inactiveAccount].deposit_amount != 0, "AutoProgramWDX: This address isn't inactive or not available");
 
-        WDX.transfer(msg.sender, users[inactiveAccount].deposit_amount);
+        WDXToken.transfer(msg.sender, users[inactiveAccount].deposit_amount);
         users[inactiveAccount].deposit_amount = 0;
         emit LiquidatedInactive(inactiveAccount, msg.sender, users[inactiveAccount].deposit_amount);
     }
 
 
-    function _setUpline(address _addr, address _upLine) private {
+    function _setUpline(address _addr, address _upLine) internal {
         if(users[_addr].upLine == address(0) && _upLine != _addr && _addr != owner() && (users[_upLine].deposit_time > 0 || _upLine == owner())) {
             users[_addr].upLine = _upLine;
             users[_upLine].referrals++;
@@ -172,8 +174,8 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upLine != address(0) || _addr == owner(), "AutoProgram: No upLine");
+    function _deposit(address _addr, uint256 _amount) internal {
+        require(users[_addr].upLine != address(0) || _addr == owner(), "AutoProgramWDX: No upLine");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -191,10 +193,11 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function _refPayout(address _addr, uint256 _amount) private {
+    function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upLine;
 
-        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "AutoProgram: Unavailable lines, please, update status");
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)),
+                                                "AutoProgramWDX: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break;
@@ -210,12 +213,12 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function maxDailyPayoutOf(address _addr) view public returns(uint256) {
+    function maxDailyPayoutOf(address _addr)public view returns(uint256) {
         return statusContract.getStatusLimit(statusContract.getAddressStatus(_addr));
     }
 
 
-    function payoutOf(address _addr) view external returns(uint256 payout, uint256 max_payout) {
+    function payoutOf(address _addr)public view returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxDailyPayoutOf(_addr);
 
         if(users[_addr].deposit_payouts < max_payout) {
@@ -244,10 +247,10 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function userInfoTotals(address _addr) view public returns(uint256 referrals,
-                                                                uint256 total_deposits,
-                                                                uint256 total_payouts,
-                                                                uint256 total_structure) {
+    function userInfoTotals(address _addr)public view returns(uint256 referrals,
+                                                              uint256 total_deposits,
+                                                              uint256 total_payouts,
+                                                              uint256 total_structure) {
         return (users[_addr].referrals,
                 users[_addr].total_deposits,
                 users[_addr].total_payouts,
@@ -255,20 +258,17 @@ contract AutoProgramWordlex is Ownable {
     }
 
 
-    function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
+    function contractInfo()public view returns(uint256 _totalUsers, uint256 _totalDeposited, uint256 _totalWithdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
 
 
-    function setUserCarPrice(address _addr, uint256 _newWDXPrice) public onlyOwner {
-        users[_addr].carPrice = _newWDXPrice;
+    function setUserCarPrice(address _addr, uint256 _newCarPrice) public onlyOwner {
+        require(_newCarPrice != 0, "");
+        users[_addr].carPrice = _newCarPrice;
     }
 
-
     //когда пользотваель сам покупает - мы делаем ему статус
-    //добавить счетчик сколько купили автомобилей в первой линии -
     //если у него больше 1го купил - помечаем его аккаунт как активный
     // если купил сам или купил кто то из 1й линии
-    // найти ближайший вверх activeAccount
-
 }

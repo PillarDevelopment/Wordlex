@@ -5,7 +5,7 @@ import "./IPriceController.sol";
 import "./Ownable.sol";
 import "./SafeMath.sol";
 
-contract WordlexStatus is Ownable {
+contract WordLexStatus is Ownable {
     using SafeMath for uint256;
 
     struct Status {
@@ -72,22 +72,20 @@ contract WordlexStatus is Ownable {
         ref_bonuses.push(5);
 
         admin = _admin;
-        users[msg.sender].status == 7;
+        users[msg.sender].status == statuses.length;
     }
 
 
     function buyStatus(uint256 _id, address payable _up_liner) public payable {
 
-        require(msg.value == getStatusPrice(_id), "Bad Amount");
-        require(users[msg.sender].status == 0, "Status already bought, please, upgrade");
-        require(_up_liner != address(0) && users[_up_liner].status > 0, "Upliner doesn't exist");
+        require(msg.value == getStatusPrice(_id), "WDX Status: Bad Amount");
+        require(users[msg.sender].status == 0, "WDX Status: Status already bought, please, upgrade");
+        require(_up_liner != address(0) && users[_up_liner].status > 0, "WDX Status: UpLiner doesn't exist");
 
-        uint256 upliner_bonus = msg.value.div(20);
-        _up_liner.transfer(upliner_bonus);
-        admin.transfer(msg.value.sub(upliner_bonus));
+        uint256 upLiner_bonus = msg.value.div(20);
+         admin.transfer(msg.value.sub(upLiner_bonus));
         _setUpline(msg.sender, _up_liner);
         users[msg.sender].status == _id;
-        // every 10 direct bonuses
         if(_up_liner != address(0) ) {
             users[_up_liner].direct_bonus += msg.value.mul(5).div(100);
             emit DirectPayout(_up_liner, msg.sender, msg.value.mul(5).div(100));
@@ -103,8 +101,8 @@ contract WordlexStatus is Ownable {
 
 
     function upgradeStatus(uint256 _id) public payable {
-        require(users[msg.sender].status > 0, "Status can't upgrade, please, buy");
-        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "Bad Amount");
+        require(users[msg.sender].status > 0, "WDX Status: Status can't upgrade, please, buy");
+        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "WDX Status: Bad Amount");
         users[msg.sender].status == _id;
     }
 
@@ -148,11 +146,12 @@ contract WordlexStatus is Ownable {
 
 
     function setAdminAddress(address payable _newAdmin) public {
-        require(msg.sender == admin);
+        require(msg.sender == admin, "WDX Status: Sender isn't current admin");
         admin = _newAdmin;
     }
 
-    function _setUpline(address _addr, address _upline) private {
+
+    function _setUpline(address _addr, address _upline) internal {
         if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
@@ -168,16 +167,16 @@ contract WordlexStatus is Ownable {
         }
     }
 
-    function _refPayout(address _addr, uint256 _amount) private {
+
+    function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upline;
-        require(ref_bonuses.length <= getAddressStatus(_addr), "Wordlex Status: Unavailable lines, please, update status");
+        require(ref_bonuses.length <= getAddressStatus(_addr), "WDX Status: Unavailable lines, please, update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
                 uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
-
                 users[up].match_bonus += bonus;
                 emit MatchPayout(up, _addr, bonus);
             }
@@ -185,10 +184,11 @@ contract WordlexStatus is Ownable {
         }
     }
 
+
     function withdraw() public {
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-        require(users[msg.sender].payouts < max_payout, "Full payouts");
+        require(users[msg.sender].payouts < max_payout, "WDX Status: Full payouts");
         if(to_payout > 0) {
             if(users[msg.sender].payouts.add(to_payout) > max_payout) {
                 to_payout = max_payout.sub(users[msg.sender].payouts);
@@ -196,7 +196,6 @@ contract WordlexStatus is Ownable {
 
             users[msg.sender].deposit_payouts += to_payout;
             users[msg.sender].payouts += to_payout;
-
             _refPayout(msg.sender, to_payout);
         }
 
@@ -206,21 +205,19 @@ contract WordlexStatus is Ownable {
             if(users[msg.sender].payouts.add(match_bonus) > max_payout) {
                 match_bonus = max_payout.sub(users[msg.sender].payouts);
             }
-
             users[msg.sender].match_bonus -= match_bonus;
             users[msg.sender].payouts += match_bonus;
             to_payout += match_bonus;
         }
-
-        require(to_payout > 0, "Zero payout");
+        require(to_payout > 0, "WDX Status: Zero payout");
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-
         msg.sender.transfer(to_payout);
     }
 
-    function payoutOf(address _addr) view public returns(uint256 payout, uint256 max_payout) {
+
+    function payoutOf(address _addr)public view returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxPayoutOf(_addr);
 
         if(users[_addr].deposit_payouts < max_payout) {
@@ -232,7 +229,8 @@ contract WordlexStatus is Ownable {
         }
     }
 
-    function maxPayoutOf(address _addr) view public returns(uint256) {
+
+    function maxPayoutOf(address _addr)public view returns(uint256) {
         return users[_addr].direct_bonus.add(users[_addr].match_bonus).add(users[_addr].deposit_amount);
     }
 

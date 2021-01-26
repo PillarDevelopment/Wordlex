@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.8.0;
 
-interface IWordlexStatus {
+interface IWordLexStatus {
 
     function getStatusPrice(uint256 _statusId) external view returns(uint256);
 
