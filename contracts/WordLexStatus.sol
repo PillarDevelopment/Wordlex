@@ -115,8 +115,8 @@ contract WordLexStatus is Ownable {
     }
 
 
-    function getStatusPrice(uint256 _id) public view returns(uint256) {
-        return statuses[_id].usdPrice.mul(controller.getCurrentUsdRate());
+    function getStatusPrice(uint256 _statusId) public view returns(uint256) {
+        return statuses[_statusId].usdPrice.mul(controller.getCurrentUsdRate());
     }
 
 

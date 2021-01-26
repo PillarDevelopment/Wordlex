@@ -61,7 +61,7 @@ contract WordLexStaking is Ownable{
 
     /**
      ###################################################################################
-     ##############################  External          #################################
+     ##############################    Public          #################################
      ###################################################################################
      */
     function deposit(address _upline, uint256 _amount)  public {
@@ -72,18 +72,16 @@ contract WordLexStaking is Ownable{
 
 
     function withdraw() public {
-
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
-        require(users[msg.sender].withdraw_time.add(7 days) < block.timestamp, "WordlexStaking: Less than 7 days have passed since the last withdrawal");
+        require(users[msg.sender].withdraw_time.add(7 days) < block.timestamp,
+                "WordLexStaking: Less than 7 days have passed since the last withdrawal");
 
         if(to_payout > 0) {
             if(users[msg.sender].payouts.add(to_payout)  > max_payout) {
                 to_payout = max_payout.sub(users[msg.sender].payouts);
             }
-
             users[msg.sender].deposit_payouts += to_payout;
             users[msg.sender].payouts += to_payout;
-
             _refPayout(msg.sender, to_payout);
         }
 
@@ -98,8 +96,7 @@ contract WordLexStaking is Ownable{
             users[msg.sender].payouts += match_bonus;
             to_payout += match_bonus;
         }
-
-        require(to_payout > 0, "WordlexStaking: Zero payout");
+        require(to_payout > 0, "WordLexStaking: Zero payout");
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
@@ -107,7 +104,6 @@ contract WordLexStaking is Ownable{
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
-
         if(users[msg.sender].payouts >= max_payout) {
             emit LimitReached(msg.sender, users[msg.sender].payouts);
         }
@@ -116,11 +112,12 @@ contract WordLexStaking is Ownable{
 
     /**
     ###################################################################################
-    ##############################  внутренние методы #################################
+    ##############################     Internal       #################################
     ###################################################################################
     */
-    function _setUpline(address _addr, address _upline) private {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
+    function _setUpline(address _addr, address _upline) internal {
+        if(users[_addr].upline == address(0) && _upline != _addr
+            && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
 
@@ -129,17 +126,15 @@ contract WordLexStaking is Ownable{
 
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
                 if(_upline == address(0)) break;
-
                 users[_upline].total_structure++;
-
                 _upline = users[_upline].upline;
             }
         }
     }
 
 
-    function _deposit(address _addr, uint256 _amount) private {
-        require(users[_addr].upline != address(0) || _addr == owner(), "WordlexStaking: No upline");
+    function _deposit(address _addr, uint256 _amount) internal {
+        require(users[_addr].upline != address(0) || _addr == owner(), "WordLexStaking: No upLine");
 
         users[_addr].payouts = 0;
         users[_addr].deposit_amount = _amount;
@@ -152,18 +147,17 @@ contract WordLexStaking is Ownable{
     }
 
 
-    function _refPayout(address _addr, uint256 _amount) private {
+    function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upline;
-        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)), "WordlexStaking: Unavailable lines, please, update status");
+        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)),
+                                            "WordLexStaking: Unavailable lines, please, Update status");
 
         for(uint8 i = 0; i < ref_bonuses.length; i++) {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
                 uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
-
                 users[up].match_bonus += bonus;
-
                 emit MatchPayout(up, _addr, bonus);
             }
             up = users[up].upline;
@@ -181,12 +175,13 @@ contract WordLexStaking is Ownable{
     }
 
 
-    function payoutOf(address _addr) external view returns(uint256 payout, uint256 max_payout) {
+    function payoutOf(address _addr) public view returns(uint256 payout, uint256 max_payout) {
         max_payout = this.maxDailyPayoutOf(_addr);
-
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time)).div(1 days)).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].deposit_payouts);
+            payout = (users[_addr].deposit_amount.mul(
+                (block.timestamp.sub(users[_addr].deposit_time)).div(1 days)
+                ).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].deposit_payouts);
 
             if(users[_addr].deposit_payouts.add(payout) > max_payout) {
                 payout = max_payout.sub(users[_addr].deposit_payouts);
@@ -195,7 +190,7 @@ contract WordLexStaking is Ownable{
     }
 
 
-    function getDailyPercent(address _addr) internal view returns(uint256 _dailyPercent) {
+    function getDailyPercent(address _addr) public view returns(uint256 _dailyPercent) {
         _dailyPercent = minimumDailyPercent;
         if (users[_addr].deposit_amount > 2e11) { // 200,000 WDX
             _dailyPercent = minimumDailyPercent.add(4);
@@ -228,17 +223,33 @@ contract WordLexStaking is Ownable{
     }
 
 
-    function userInfo(address _addr) view public returns(address upline, uint40 deposit_time, uint256 deposit_amount, uint256 payouts, uint256 match_bonus) {
-        return (users[_addr].upline, users[_addr].deposit_time, users[_addr].deposit_amount, users[_addr].payouts, users[_addr].match_bonus);
+    function userInfo(address _addr)public view returns(address upline,
+                                                        uint40 deposit_time,
+                                                        uint256 deposit_amount,
+                                                        uint256 payouts,
+                                                        uint256 match_bonus) {
+        return (users[_addr].upline,
+                users[_addr].deposit_time,
+                users[_addr].deposit_amount,
+                users[_addr].payouts,
+                users[_addr].match_bonus);
     }
 
 
-    function userInfoTotals(address _addr) view public returns(uint256 referrals, uint256 total_deposits, uint256 total_payouts, uint256 total_structure) {
-        return (users[_addr].referrals, users[_addr].total_deposits, users[_addr].total_payouts, users[_addr].total_structure);
+    function userInfoTotals(address _addr)public view returns(uint256 referrals,
+                                                                uint256 total_deposits,
+                                                                uint256 total_payouts,
+                                                                uint256 total_structure) {
+        return (users[_addr].referrals,
+                users[_addr].total_deposits,
+                users[_addr].total_payouts,
+                users[_addr].total_structure);
     }
 
 
-    function contractInfo() view public returns(uint256 _total_users, uint256 _total_deposited, uint256 _total_withdraw) {
+    function contractInfo()public view  returns(uint256 _total_users,
+                                                uint256 _total_deposited,
+                                                uint256 _total_withdraw) {
         return (total_users, total_deposited, total_withdraw);
     }
 

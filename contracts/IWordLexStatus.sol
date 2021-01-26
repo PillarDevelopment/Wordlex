@@ -12,4 +12,6 @@ interface IWordLexStatus {
     function getStatusLines(uint256 _statusId) external view returns(uint256);
 
     function getStatusName(uint256 _statusId) external view returns(string memory);
+
+    function getStatusUSDPrice(uint256 _statusId) external view returns(uint256);
 }
