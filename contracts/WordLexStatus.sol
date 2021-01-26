@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.8.0;
+pragma solidity ^0.5.8;
 
 import "./IPriceController.sol";
 import "./Ownable.sol";
@@ -16,18 +16,17 @@ contract WordLexStatus is Ownable {
     }
 
     struct User {
-        uint40 deposit_time;
+        uint40 depositTime;
         uint40 currentDirectUsers;
         uint40 status;
         uint256 referrals;
         uint256 payouts;
-        uint256 direct_bonus;
-        uint256 match_bonus;
-        uint256 deposit_amount;
-        uint256 deposit_payouts;
-        uint256 total_deposits;
-        uint256 total_payouts;
-        uint256 total_structure;
+        uint256 directBonus;
+        uint256 matchBonus;
+        uint256 depositAmount;
+        uint256 depositPayouts;
+        uint256 totalPayouts;
+        uint256 totalStructure;
         address upline;
     }
 
@@ -35,11 +34,10 @@ contract WordLexStatus is Ownable {
 
     IPriceController public controller;
 
-    uint8[] public ref_bonuses;
+    uint8[] public refBonuses;
 
-    uint256 public total_users = 1;
-    uint256 public total_deposited;
-    uint256 public total_withdraw;
+    uint256 public totalUsers = 1;
+    uint256 public totalWithdraw;
 
     mapping(address => User) public users;
 
@@ -60,49 +58,50 @@ contract WordLexStatus is Ownable {
         statuses.push(Status({usdPrice:6000, weeklyLimitUSD:3000, lines:8, name:"Status"}));
         statuses.push(Status({usdPrice:10000, weeklyLimitUSD:5000, lines:10, name:"Brilliant"}));
 
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
-        ref_bonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
+        refBonuses.push(5);
 
         admin = _admin;
         users[msg.sender].status == statuses.length;
     }
 
 
-    function buyStatus(uint256 _id, address payable _up_liner) public payable {
+    function buyStatus(uint256 _id, address payable _upLiner) public payable {
 
         require(msg.value == getStatusPrice(_id), "WDX Status: Bad Amount");
         require(users[msg.sender].status == 0, "WDX Status: Status already bought, please, upgrade");
-        require(_up_liner != address(0) && users[_up_liner].status > 0, "WDX Status: UpLiner doesn't exist");
+        require(_upLiner != address(0) && users[_upLiner].status > 0, "WDX Status: UpLiner doesn't exist");
 
-        uint256 upLiner_bonus = msg.value.div(20);
-         admin.transfer(msg.value.sub(upLiner_bonus));
-        _setUpline(msg.sender, _up_liner);
+        uint256 upLinerBonus = msg.value.div(20);
         users[msg.sender].status == _id;
-        if(_up_liner != address(0) ) {
-            users[_up_liner].direct_bonus += msg.value.mul(5).div(100);
-            emit DirectPayout(_up_liner, msg.sender, msg.value.mul(5).div(100));
-            users[_up_liner].currentDirectUsers++;
+        _setUpline(msg.sender, _upLiner);
+         admin.transfer(msg.value.sub(upLinerBonus));
+        if(_upLiner != address(0)) {
+            users[_upLiner].directBonus =users[_upLiner].directBonus.add(msg.value.mul(5).div(100));
+            emit DirectPayout(_upLiner, msg.sender, msg.value.mul(5).div(100));
+            users[_upLiner].currentDirectUsers++;
 
-            if (users[_up_liner].currentDirectUsers == 10) {
-                _up_liner.transfer(users[_up_liner].direct_bonus);
-                users[_up_liner].direct_bonus = 0;
-                users[_up_liner].currentDirectUsers = 0;
+            if (users[_upLiner].currentDirectUsers == 10) {
+                users[_upLiner].currentDirectUsers = 0;
+                uint256 directBonus = users[_upLiner].directBonus;
+                users[_upLiner].directBonus = 0;
+                _upLiner.transfer(directBonus);
             }
         }
     }
 
 
     function upgradeStatus(uint256 _id) public payable {
-        require(users[msg.sender].status > 0, "WDX Status: Status can't upgrade, please, buy");
-        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "WDX Status: Bad Amount");
+        require(users[msg.sender].status > 0, "WDXStatus:Status can't upgrade, please, buy");
+        require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "WDXStatus:Bad Amount");
         users[msg.sender].status == _id;
     }
 
@@ -146,22 +145,24 @@ contract WordLexStatus is Ownable {
 
 
     function setAdminAddress(address payable _newAdmin) public {
-        require(msg.sender == admin, "WDX Status: Sender isn't current admin");
+        require(msg.sender == admin, "WDXStatus:Sender isn't current admin");
         admin = _newAdmin;
     }
 
 
     function _setUpline(address _addr, address _upline) internal {
-        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].deposit_time > 0 || _upline == owner())) {
+        if(users[_addr].upline == address(0) &&
+            _upline != _addr && _addr != owner() &&
+                (users[_upline].depositTime > 0 || _upline == owner())) {
+
             users[_addr].upline = _upline;
             users[_upline].referrals++;
-
             emit Upline(_addr, _upline);
             total_users++;
 
-            for(uint8 i = 0; i < ref_bonuses.length; i++) {
+            for(uint8 i = 0; i < refBonuses.length; i++) {
                 if(_upline == address(0)) break;
-                users[_upline].total_structure++;
+                users[_upline].totalStructure++;
                 _upline = users[_upline].upline;
             }
         }
@@ -170,14 +171,14 @@ contract WordLexStatus is Ownable {
 
     function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upline;
-        require(ref_bonuses.length <= getAddressStatus(_addr), "WDX Status: Unavailable lines, please, update status");
+        require(refBonuses.length <= getAddressStatus(_addr), "WDX Status: Unavailable lines, please, update status");
 
-        for(uint8 i = 0; i < ref_bonuses.length; i++) {
+        for(uint8 i = 0; i < refBonuses.length; i++) {
             if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
-                users[up].match_bonus += bonus;
+                uint256 bonus = _amount.mul(refBonuses[i]).div(100);
+                users[up].matchBonus += bonus;
                 emit MatchPayout(up, _addr, bonus);
             }
             up = users[up].upline;
@@ -186,52 +187,54 @@ contract WordLexStatus is Ownable {
 
 
     function withdraw() public {
-        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
+        (uint256 toPayout, uint256 maxPayout) = this.payoutOf(msg.sender);
 
-        require(users[msg.sender].payouts < max_payout, "WDX Status: Full payouts");
-        if(to_payout > 0) {
-            if(users[msg.sender].payouts.add(to_payout) > max_payout) {
-                to_payout = max_payout.sub(users[msg.sender].payouts);
+        require(users[msg.sender].payouts < maxPayout, "WDXStatus:Full payouts");
+        if(toPayout > 0) {
+            if(users[msg.sender].payouts.add(toPayout) > maxPayout) {
+                toPayout = maxPayout.sub(users[msg.sender].payouts);
             }
 
-            users[msg.sender].deposit_payouts += to_payout;
-            users[msg.sender].payouts += to_payout;
-            _refPayout(msg.sender, to_payout);
+            users[msg.sender].depositPayouts += toPayout;
+            users[msg.sender].payouts += toPayout;
+            _refPayout(msg.sender, toPayout);
         }
 
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
-            uint256 match_bonus = users[msg.sender].match_bonus;
+        if(users[msg.sender].payouts < maxPayout && users[msg.sender].matchBonus > 0) {
+            uint256 matchBonus = users[msg.sender].matchBonus;
 
-            if(users[msg.sender].payouts.add(match_bonus) > max_payout) {
-                match_bonus = max_payout.sub(users[msg.sender].payouts);
+            if(users[msg.sender].payouts.add(matchBonus) > maxPayout) {
+                matchBonus = maxPayout.sub(users[msg.sender].payouts);
             }
-            users[msg.sender].match_bonus -= match_bonus;
-            users[msg.sender].payouts += match_bonus;
-            to_payout += match_bonus;
+            users[msg.sender].matchBonus -= matchBonus;
+            users[msg.sender].payouts += matchBonus;
+            toPayout += matchBonus;
         }
-        require(to_payout > 0, "WDX Status: Zero payout");
+        require(toPayout > 0, "WDXStatus:Zero payout");
 
-        users[msg.sender].total_payouts += to_payout;
-        total_withdraw += to_payout;
-        msg.sender.transfer(to_payout);
+        users[msg.sender].totalPayouts += toPayout;
+        totalWithdraw += toPayout;
+        msg.sender.transfer(toPayout);
     }
 
 
-    function payoutOf(address _addr)public view returns(uint256 payout, uint256 max_payout) {
-        max_payout = this.maxPayoutOf(_addr);
+    function payoutOf(address _addr)public view returns(uint256 payout, uint256 maxPayout) {
+        maxPayout = this.maxPayoutOf(_addr);
 
-        if(users[_addr].deposit_payouts < max_payout) {
-            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time)).div(1 days)).div(100)).sub(users[_addr].deposit_payouts);
+        if(users[_addr].depositPayouts < maxPayout) {
+            payout = (users[_addr].depositAmount.mul(
+                (block.timestamp.sub(users[_addr].depositTime)
+                ).div(1 days)).div(100)).sub(users[_addr].depositPayouts);
 
-            if(users[_addr].deposit_payouts.add(payout) > max_payout) {
-                payout = max_payout.sub(users[_addr].deposit_payouts);
+            if(users[_addr].depositPayouts.add(payout) > maxPayout) {
+                payout = maxPayout.sub(users[_addr].depositPayouts);
             }
         }
     }
 
 
     function maxPayoutOf(address _addr)public view returns(uint256) {
-        return users[_addr].direct_bonus.add(users[_addr].match_bonus).add(users[_addr].deposit_amount);
+        return users[_addr].directBonus.add(users[_addr].matchBonus).add(users[_addr].depositAmount);
     }
 
 }

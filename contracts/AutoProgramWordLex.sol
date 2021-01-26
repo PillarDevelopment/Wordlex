@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.8.0;
+pragma solidity ^0.5.8;
 
 import  "./ITRC20.sol";
 import "./IWordLexStatus.sol";
@@ -89,22 +89,15 @@ contract AutoProgramWordLex is Ownable {
 
     function withdraw() public {
 
-        if (users[msg.sender].direct_bonus == 0 || users[msg.sender].direct_bonus == users[msg.sender].carPrice && users[msg.sender].deposit_time.add(365 days)  < block.timestamp ) {
-            revert();
-        }
-
-        if (users[msg.sender].deposit_time.add(180 days)  >= block.timestamp && users[msg.sender].direct_bonus == 0) {
-            users[users[msg.sender].upLine].match_bonus += users[msg.sender].match_bonus;
-            users[msg.sender].match_bonus = 0;
-        }
-
         (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
 
-      //  if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) { //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
+      //  if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) {
+        //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
       //      users[msg.sender].statusOfCar = true;
       //  }
 
-        require(users[msg.sender].deposit_time.add(180 days)  < block.timestamp || users[msg.sender].statusOfCar == true,
+        require(users[msg.sender].deposit_time.add(180 days) < block.timestamp
+            || users[msg.sender].statusOfCar == true,
                                 "AutoProgramWDX: Less than 6 months have passed since the last car Sell");
 
         if(to_payout > 0) {
@@ -146,17 +139,21 @@ contract AutoProgramWordLex is Ownable {
         require(users[msg.sender].statusOfCar == true, "AutoProgramWDX: Sender is not Active Account");
         require(users[inactiveAccount].statusOfCar == false, "AutoProgramWDX: This address bought a car");
         require(users[inactiveAccount].total_structure == 0, "AutoProgramWDX: This address have a structure");
-        require( users[inactiveAccount].deposit_time.add(180 days) < now);
-        require(users[inactiveAccount].deposit_amount != 0, "AutoProgramWDX: This address isn't inactive or not available");
+        require(users[inactiveAccount].deposit_time.add(180 days) < now, "AutoProgramWDX: Need more time");
+        require(users[inactiveAccount].deposit_amount != 0,
+                "AutoProgramWDX: This address isn't inactive or not available");
 
-        WDXToken.transfer(msg.sender, users[inactiveAccount].deposit_amount);
+        uint256 liquidationAmount = users[inactiveAccount].deposit_amount;
         users[inactiveAccount].deposit_amount = 0;
-        emit LiquidatedInactive(inactiveAccount, msg.sender, users[inactiveAccount].deposit_amount);
+        WDXToken.transfer(msg.sender, liquidationAmount);
+        emit LiquidatedInactive(inactiveAccount, msg.sender, liquidationAmount);
     }
 
 
     function _setUpline(address _addr, address _upLine) internal {
-        if(users[_addr].upLine == address(0) && _upLine != _addr && _addr != owner() && (users[_upLine].deposit_time > 0 || _upLine == owner())) {
+        if(users[_addr].upLine == address(0) && _upLine != _addr && _addr != owner()
+                && (users[_upLine].deposit_time > 0 || _upLine == owner())) {
+
             users[_addr].upLine = _upLine;
             users[_upLine].referrals++;
 
@@ -223,7 +220,9 @@ contract AutoProgramWordLex is Ownable {
 
         if(users[_addr].deposit_payouts < max_payout) {
 
-            payout = (users[_addr].deposit_amount.mul((block.timestamp.sub(users[_addr].deposit_time).div(1 days)).div(1000)).sub(users[_addr].deposit_payouts));
+            payout = (users[_addr].deposit_amount.mul(
+                (block.timestamp.sub(users[_addr].deposit_time).div(1 days)
+                    ).div(1000)).sub(users[_addr].deposit_payouts));
 
             if(users[_addr].deposit_payouts.add(payout)  > max_payout) {
                 payout = max_payout.sub(users[_addr].deposit_payouts);
@@ -232,7 +231,7 @@ contract AutoProgramWordLex is Ownable {
     }
 
 
-    function userInfo(address _addr) view public returns(address upline,
+    function userInfo(address _addr) public view returns(address upline,
                                                         uint40 deposit_time,
                                                         uint256 deposit_amount,
                                                         uint256 payouts,
@@ -268,7 +267,6 @@ contract AutoProgramWordLex is Ownable {
         users[_addr].carPrice = _newCarPrice;
     }
 
-    //когда пользотваель сам покупает - мы делаем ему статус
     //если у него больше 1го купил - помечаем его аккаунт как активный
     // если купил сам или купил кто то из 1й линии
 }
