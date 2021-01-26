@@ -158,7 +158,7 @@ contract WordLexStatus is Ownable {
             users[_addr].upline = _upline;
             users[_upline].referrals++;
             emit Upline(_addr, _upline);
-            total_users++;
+            totalUsers++;
 
             for(uint8 i = 0; i < refBonuses.length; i++) {
                 if(_upline == address(0)) break;
