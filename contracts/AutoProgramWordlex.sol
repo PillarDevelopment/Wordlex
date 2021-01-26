@@ -25,7 +25,6 @@ contract AutoProgramWordlex is Ownable {
         uint256 total_structure;
         uint256 carPrice;
         bool statusOfCar; // activeAccount
-        //uint256 activeUsers; // кто купил машину у юзера в структуре // todo
         uint256[] firstLineIds;
     }
 
@@ -46,6 +45,7 @@ contract AutoProgramWordlex is Ownable {
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
     event Withdraw(address indexed addr, uint256 amount);
     event LimitReached(address indexed addr, uint256 amount);
+    event LiquidatedInactive(address indexed inactiveAccount, address indexed liquidator, uint256 amount);
 
     constructor(ITRC20 _wdx, IWordlexStatus _statusContract) public {
         WDX = _wdx;
@@ -69,12 +69,20 @@ contract AutoProgramWordlex is Ownable {
      ##############################  External          #################################
      ###################################################################################
      */
-    function buyCar(address _upline, uint256 _amount)  public {
-        _setUpline(msg.sender, _upline);
+    function buyCar(uint256 _amount)  public {
+
         require(_amount == users[msg.sender].carPrice && users[msg.sender].carPrice != 0, "AutoProgram: Invalid amount or carPrice isn't determined");
+        require(users[msg.sender].upLine != address(0x0), "AutoProgramWDX: Address not registered");
         _deposit(msg.sender, _amount);
         WDX.transferFrom(msg.sender, address(this), _amount);
         users[msg.sender].statusOfCar = true;
+    }
+
+
+    function registration(address _upline, uint256 _carPrice, address _addr) public onlyOwner {
+        _setUpline(_addr, _upline);
+        users[_addr].carPrice = _carPrice;
+        users[_addr].statusOfCar = false;
     }
 
 
@@ -124,38 +132,24 @@ contract AutoProgramWordlex is Ownable {
 
         users[msg.sender].total_payouts += to_payout;
         total_withdraw += to_payout;
-        (address inactiveAccount, uint256 _inactiveAmount) = _findInactiveAccount(msg.sender);
-        WDX.transfer(inactiveAccount, _inactiveAmount);
+
         WDX.transfer(msg.sender, to_payout);
 
         emit Withdraw(msg.sender, to_payout);
-
         if(users[msg.sender].payouts >= max_payout) {
             emit LimitReached(msg.sender, users[msg.sender].payouts);
         }
     }
 
 
-    function _findInactiveAccount(address _addr) public view returns(address inactiveAccount, uint256 amount) {
-        inactiveAccount;
-        for(uint256 i = 0; i < users[_addr].firstLineIds.length; i++) {
-            if(users[ids[users[_addr].firstLineIds[i]]].statusOfCar == false &&
-            users[ids[users[_addr].firstLineIds[i]]].total_structure == 0 &&
-                users[ids[users[_addr].firstLineIds[i]]].deposit_time.add(180 days) < now &&
-                users[ids[users[_addr].firstLineIds[i]]].deposit_amount != 0) {
-                inactiveAccount = ids[users[_addr].firstLineIds[i]];
-            }
-            else {
-            inactiveAccount = address(0x0);
-            //for (uint256 i = 0; i < users[_addr].firstLineIds.length; i++) { // длина первой линии
-                // заходим в первую линию первой линии
-            }
-               // for (uint256 y = 0; y < users[ids[users[_addr].firstLineIds[i]]].firstLineIds.length; y++) {
-               //
-               // }
-            //  }
-        }
-        amount = users[inactiveAccount].deposit_amount;
+    function liquidateInactiveAccount(address inactiveAccount) public {
+        require(users[inactiveAccount].statusOfCar == false && users[inactiveAccount].total_structure == 0 &&
+            users[inactiveAccount].deposit_time.add(180 days) < now &&
+            users[inactiveAccount].deposit_amount != 0, "AutoProgramWDX: This address isn't inactive or not available");
+
+        WDX.transfer(msg.sender, users[inactiveAccount].deposit_amount);
+        users[inactiveAccount].deposit_amount = 0;
+        emit LiquidatedInactive(inactiveAccount, msg.sender, users[inactiveAccount].deposit_amount);
     }
 
 
@@ -171,9 +165,7 @@ contract AutoProgramWordlex is Ownable {
 
             for(uint8 i = 0; i < ref_bonuses.length; i++) {
                 if(_upLine == address(0)) break;
-
                 users[_upLine].total_structure++;
-
                 _upLine = users[_upLine].upLine;
             }
         }
@@ -193,10 +185,8 @@ contract AutoProgramWordlex is Ownable {
         emit NewDeposit(_addr, _amount);
 
         if(users[_addr].upLine != address(0) ) {
-            // за каждые 10 купивших статусы в 1 линии, 5% от суммы купленных статусов. (Не важно какой статус был куплен)
-            // накопить директ за 10 и начислить если это 10 20 и более статус
-            users[users[_addr].upLine].direct_bonus += _amount.mul(3).div(100);
-            emit DirectPayout(users[_addr].upLine, _addr, _amount.mul(3).div(100));
+            users[users[_addr].upLine].direct_bonus += _amount.mul(5).div(100);
+            emit DirectPayout(users[_addr].upLine, _addr, _amount.mul(5).div(100));
         }
     }
 
