@@ -23,9 +23,6 @@ contract WordLexStatus is Ownable {
         uint256 payouts;
         uint256 directBonus;
         uint256 matchBonus;
-        uint256 depositAmount;
-        uint256 depositPayouts;
-        uint256 totalPayouts;
         uint256 totalStructure;
         address upline;
     }
@@ -70,22 +67,23 @@ contract WordLexStatus is Ownable {
         refBonuses.push(5);
 
         admin = _admin;
-        users[msg.sender].status == statuses.length;
+        users[admin].status = 7;
+        _setUpline(admin, address(0x0));
     }
 
 
-    function buyStatus(uint256 _id, address payable _upLiner) public payable {
+    function buyStatus(uint40 _id, address payable _upLiner) public payable {
 
         require(msg.value == getStatusPrice(_id), "WDX Status: Bad Amount");
         require(users[msg.sender].status == 0, "WDX Status: Status already bought, please, upgrade");
         require(_upLiner != address(0) && users[_upLiner].status > 0, "WDX Status: UpLiner doesn't exist");
 
-        uint256 upLinerBonus = msg.value.div(20);
-        users[msg.sender].status == _id;
+        users[msg.sender].status = _id;
         _setUpline(msg.sender, _upLiner);
-         admin.transfer(msg.value.sub(upLinerBonus));
+        users[msg.sender].depositTime = uint40(block.timestamp);
+
         if(_upLiner != address(0)) {
-            users[_upLiner].directBonus =users[_upLiner].directBonus.add(msg.value.mul(5).div(100));
+            users[_upLiner].directBonus = users[_upLiner].directBonus.add(msg.value.mul(5).div(100));
             emit DirectPayout(_upLiner, msg.sender, msg.value.mul(5).div(100));
             users[_upLiner].currentDirectUsers++;
 
@@ -99,10 +97,11 @@ contract WordLexStatus is Ownable {
     }
 
 
-    function upgradeStatus(uint256 _id) public payable {
+    function upgradeStatus(uint40 _id) public payable {
         require(users[msg.sender].status > 0, "WDXStatus:Status can't upgrade, please, buy");
+        require(users[msg.sender].status < _id, "WDXStatus: You can't specify the status below");
         require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "WDXStatus:Bad Amount");
-        users[msg.sender].status == _id;
+        users[msg.sender].status = _id;
     }
 
 
@@ -145,27 +144,20 @@ contract WordLexStatus is Ownable {
 
 
     function setAdminAddress(address payable _newAdmin) public {
-        require(msg.sender == admin, "WDXStatus:Sender isn't current admin");
+        require(msg.sender == owner(), "WDXStatus:Sender isn't current owner");
         admin = _newAdmin;
     }
 
 
-    function _setUpline(address _addr, address _upline) internal {
-        if(users[_addr].upline == address(0) &&
-            _upline != _addr && _addr != owner() &&
-                (users[_upline].depositTime > 0 || _upline == owner())) {
+    function withdraw() public {
+        uint256 toPayout = users[msg.sender].matchBonus;
 
-            users[_addr].upline = _upline;
-            users[_upline].referrals++;
-            emit Upline(_addr, _upline);
-            totalUsers++;
+        users[msg.sender].payouts += toPayout;
+        totalWithdraw += toPayout;
+        users[msg.sender].matchBonus = 0;
 
-            for(uint8 i = 0; i < refBonuses.length; i++) {
-                if(_upline == address(0)) break;
-                users[_upline].totalStructure++;
-                _upline = users[_upline].upline;
-            }
-        }
+        _refPayout(msg.sender, toPayout);
+        msg.sender.transfer(toPayout);
     }
 
 
@@ -186,55 +178,27 @@ contract WordLexStatus is Ownable {
     }
 
 
-    function withdraw() public {
-        (uint256 toPayout, uint256 maxPayout) = this.payoutOf(msg.sender);
+    function _setUpline(address _addr, address _upline) internal {
+        if(users[_addr].upline == address(0) && _upline != _addr && _addr != owner() && (users[_upline].depositTime > 0 || _upline == owner())) {
 
-        require(users[msg.sender].payouts < maxPayout, "WDXStatus:Full payouts");
-        if(toPayout > 0) {
-            if(users[msg.sender].payouts.add(toPayout) > maxPayout) {
-                toPayout = maxPayout.sub(users[msg.sender].payouts);
-            }
+            users[_addr].upline = _upline;
+            users[_upline].referrals++;
+            emit Upline(_addr, _upline);
+            totalUsers++;
 
-            users[msg.sender].depositPayouts += toPayout;
-            users[msg.sender].payouts += toPayout;
-            _refPayout(msg.sender, toPayout);
-        }
-
-        if(users[msg.sender].payouts < maxPayout && users[msg.sender].matchBonus > 0) {
-            uint256 matchBonus = users[msg.sender].matchBonus;
-
-            if(users[msg.sender].payouts.add(matchBonus) > maxPayout) {
-                matchBonus = maxPayout.sub(users[msg.sender].payouts);
-            }
-            users[msg.sender].matchBonus -= matchBonus;
-            users[msg.sender].payouts += matchBonus;
-            toPayout += matchBonus;
-        }
-        require(toPayout > 0, "WDXStatus:Zero payout");
-
-        users[msg.sender].totalPayouts += toPayout;
-        totalWithdraw += toPayout;
-        msg.sender.transfer(toPayout);
-    }
-
-
-    function payoutOf(address _addr)public view returns(uint256 payout, uint256 maxPayout) {
-        maxPayout = this.maxPayoutOf(_addr);
-
-        if(users[_addr].depositPayouts < maxPayout) {
-            payout = (users[_addr].depositAmount.mul(
-                (block.timestamp.sub(users[_addr].depositTime)
-                ).div(1 days)).div(100)).sub(users[_addr].depositPayouts);
-
-            if(users[_addr].depositPayouts.add(payout) > maxPayout) {
-                payout = maxPayout.sub(users[_addr].depositPayouts);
+            for(uint8 i = 0; i < refBonuses.length; i++) {
+                if(_upline == address(0)) break;
+                users[_upline].totalStructure++;
+                _upline = users[_upline].upline;
             }
         }
     }
 
 
-    function maxPayoutOf(address _addr)public view returns(uint256) {
-        return users[_addr].directBonus.add(users[_addr].matchBonus).add(users[_addr].depositAmount);
+    function setRefBonusesPercentage(uint256 line, uint256 newAmount) public {
+        require(msg.sender == admin, "WDX Status: address isn't admin");
+        require(refBonuses.length > line, "WDX Status: unavailable line");
+        refBonuses[line] - newAmount;
     }
 
 }
