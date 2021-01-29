@@ -8,7 +8,6 @@ import "./SafeMath.sol";
 
 contract WordLexStaking is Ownable{
     using SafeMath for uint256;
-    using SafeMath for uint40;
 
     struct User {
         address upline;
@@ -16,11 +15,9 @@ contract WordLexStaking is Ownable{
         uint256 payouts;
         uint256 matchBonus;
         uint256 depositAmount;
-        uint256 depositPayouts;
-        uint40 depositTime;
+        uint256 depositTime;
         uint256 withdrawTime;
         uint256 totalDeposits;
-        uint256 totalPayouts;
         uint256 totalStructure;
     }
 
@@ -56,6 +53,7 @@ contract WordLexStaking is Ownable{
         refBonuses.push(20);
     }
 
+
     function deposit(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
         _deposit(msg.sender, _amount);
@@ -65,30 +63,18 @@ contract WordLexStaking is Ownable{
 
     function withdraw(uint256 _amount) public {
         require(_amount <= users[msg.sender].depositAmount, "WordLexStaking:incorrect amount, try less");
-
-        (uint256 toPayout, uint256 maxPayout) = this.payoutOf(msg.sender, _amount);
-        if (toPayout >= _amount) {
-            toPayout == _amount;
-        }
-
         require(users[msg.sender].withdrawTime.add(7 days) < block.timestamp,
-                "WordLexStaking: Less than 7 days have passed since the last withdrawal");
+            "WordLexStaking: Less than 7 days have passed since the last withdrawal");
+
+        uint256 toPayout = this.payoutOf(msg.sender, _amount);
 
         if(toPayout > 0) {
-            if(users[msg.sender].payouts.add(toPayout) > maxPayout) {
-                toPayout = maxPayout.sub(users[msg.sender].payouts);
-            }
-            users[msg.sender].depositPayouts += toPayout;
             users[msg.sender].payouts += toPayout;
             _refPayout(msg.sender, toPayout);
         }
 
-        if(users[msg.sender].payouts < maxPayout && users[msg.sender].matchBonus > 0) {
+        if(users[msg.sender].matchBonus > 0) {
             uint256 matchBonus = users[msg.sender].matchBonus;
-
-            if(users[msg.sender].payouts.add(matchBonus) > maxPayout) {
-                matchBonus = maxPayout.sub(users[msg.sender].payouts);
-            }
 
             users[msg.sender].matchBonus -= matchBonus;
             users[msg.sender].payouts += matchBonus;
@@ -97,7 +83,6 @@ contract WordLexStaking is Ownable{
 
         require(toPayout > 0, "WordLexStaking: Zero payout");
 
-        users[msg.sender].totalPayouts += toPayout;
         totalWithdraw += toPayout;
         users[msg.sender].withdrawTime = block.timestamp;
         users[msg.sender].depositAmount -= _amount;
@@ -107,60 +92,73 @@ contract WordLexStaking is Ownable{
     }
 
 
+    function setMinimumDailyPercent(uint256 _newPercent) public onlyOwner {
+        minimumDailyPercent = _newPercent;
+    }
+
+
     function maxDailyPayoutOf(address _statusHolder)public view returns(uint256) {
         return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
     }
 
 
-    function payoutOf(address _addr, uint256 _amount) public view returns(uint256 payout, uint256 maxPayout) {
-        maxPayout = this.maxDailyPayoutOf(_addr);
+    function payoutOf(address _addr, uint256 _amount) public view returns(uint256 payout) {
+        uint256 maxPayout = this.maxDailyPayoutOf(_addr);
 
-        if(_amount < maxPayout) {
+        if(_amount <= maxPayout) {
 
             payout = generateCompoundInterest(_addr, _amount);
-
-            if(users[_addr].depositPayouts.add(payout) > maxPayout) {
-                payout = maxPayout.sub(users[_addr].depositPayouts);
-            }
+        }
+        else {
+            payout = 0;
         }
     }
 
 
     function getDailyPercent(address _addr) public view returns(uint256 _dailyPercent) {
-        _dailyPercent = minimumDailyPercent;
-        if (users[_addr].depositAmount > 2e11) { // 200,000 WDX
-            _dailyPercent = minimumDailyPercent.add(4);
-        }
-        if (users[_addr].depositAmount > 1e11) {
-            _dailyPercent = minimumDailyPercent.add(3);
-        }
-        if (users[_addr].depositAmount > 2e10) {
-            _dailyPercent = minimumDailyPercent.add(2);
-        }
-        if (users[_addr].depositAmount > 1e10) {
-            _dailyPercent = minimumDailyPercent.add(1);
-        }
+        return minimumDailyPercent.add(getDepositHoldBonus(users[_addr].depositAmount)).add(getTimeBonus(users[_addr].depositTime));
+    }
 
-        if (block.timestamp > users[_addr].depositTime.add(548 days)) {
-            _dailyPercent = _dailyPercent.add(5);
+
+    function getTimeBonus(uint256 _depositTime) public view returns(uint256 _dailyTimeBonus) {
+        if (block.timestamp > _depositTime.add(30 days)) {
+            _dailyTimeBonus = 1;
         }
-        if (block.timestamp > users[_addr].depositTime.add(365 days)) {
-            _dailyPercent = _dailyPercent.add(4);
+        if (block.timestamp > _depositTime.add(90 days)) {
+            _dailyTimeBonus = 2;
         }
-        if (block.timestamp > users[_addr].depositTime.add(180 days)) {
-            _dailyPercent = _dailyPercent.add(3);
+        if (block.timestamp > _depositTime.add(180 days)) {
+            _dailyTimeBonus = 3;
         }
-        if (block.timestamp > users[_addr].depositTime.add(90 days)) {
-            _dailyPercent = _dailyPercent.add(2);
+        if (block.timestamp > _depositTime.add(365 days)) {
+            _dailyTimeBonus = 4;
         }
-        if (block.timestamp > users[_addr].depositTime.add(30 days)) {
-            _dailyPercent = _dailyPercent.add(1);
+        if (block.timestamp > _depositTime.add(548 days)) {
+            _dailyTimeBonus = 5;
         }
+        return _dailyTimeBonus;
+    }
+
+
+    function getDepositHoldBonus(uint256 _depositAmount) public pure returns(uint256 _dailyHoldBonus) {
+        if (_depositAmount > 10000000000) { // 10,000 WDX
+            _dailyHoldBonus = 1;
+        }
+        if (_depositAmount > 20000000000) { // 20,000 WDX
+            _dailyHoldBonus = 2;
+        }
+        if (_depositAmount > 100000000000) { // 100,000 WDX
+            _dailyHoldBonus = 3;
+        }
+        if (_depositAmount > 200000000000) { // 200,000 WDX
+            _dailyHoldBonus = 4;
+        }
+        return _dailyHoldBonus;
     }
 
 
     function userInfo(address _addr)public view returns(address upline,
-                                                        uint40 depositTime,
+                                                        uint256 depositTime,
                                                         uint256 depositAmount,
                                                         uint256 payouts,
                                                         uint256 matchBonus) {
@@ -174,11 +172,9 @@ contract WordLexStaking is Ownable{
 
     function userInfoTotals(address _addr)public view returns(uint256 referrals,
                                                                 uint256 totalDeposits,
-                                                                uint256 totalPayouts,
                                                                 uint256 totalStructure) {
         return (users[_addr].referrals,
                 users[_addr].totalDeposits,
-                users[_addr].totalPayouts,
                 users[_addr].totalStructure);
     }
 
@@ -192,11 +188,16 @@ contract WordLexStaking is Ownable{
 
     function generateCompoundInterest(address _addr, uint256 amount) public view returns(uint256) {
         uint256 accAmount = amount;
-        uint256 accDay = uint40(block.timestamp).div(users[_addr].depositTime);
+        uint256 accDay = (block.timestamp.sub(users[_addr].depositTime)).div(1 days);
         uint256 currentPercent = getDailyPercent(_addr);
 
-        for (uint256 i = 0; i < accDay; i++) {
-            accAmount = accAmount.mul(currentPercent).div(1000);  // на каждой итерации получаем общую сумму бонусов и умножаем ее на процент
+        if (accDay > 1) {
+            for (uint256 i = 0; i < accDay; i++) {
+                accAmount = accAmount.add(accAmount.mul(currentPercent).div(1000));
+            }
+        }
+        else {
+            accAmount = 0;
         }
         return accAmount;
     }
@@ -225,7 +226,7 @@ contract WordLexStaking is Ownable{
         users[_addr].depositAmount = users[_addr].depositAmount.add(_amount);
 
         if (users[_addr].depositTime == 0) {
-            users[_addr].depositTime = uint40(block.timestamp);
+            users[_addr].depositTime = block.timestamp;
         }
 
         users[_addr].totalDeposits += _amount;
