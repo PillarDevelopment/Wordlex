@@ -24,168 +24,103 @@ contract WordLexStaking is Ownable{
         uint256 totalStructure;
     }
 
-    ITRC20 public WDX;
+    ITRC20 public wdxToken;
     IWordLexStatus public statusContract;
 
     mapping(address => User) public users;
-    uint8[] public ref_bonuses;
+    uint8[] public refBonuses;
 
-    uint256 public total_users = 1;
-    uint256 public total_deposited;
-    uint256 public total_withdraw;
+    uint256 public totalUsers = 1;
+    uint256 public totalDeposited;
+    uint256 public totalWithdraw;
     uint256 public minimumDailyPercent = 6;
 
     event Upline(address indexed addr, address indexed upline);
     event NewDeposit(address indexed addr, uint256 amount);
     event MatchPayout(address indexed addr, address indexed from, uint256 amount);
     event Withdraw(address indexed addr, uint256 amount);
-    event LimitReached(address indexed addr, uint256 amount);
 
     constructor(ITRC20 _wdx, IWordLexStatus _statusContract) public {
-        WDX = _wdx;
+        wdxToken = _wdx;
         statusContract = _statusContract;
 
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
-        ref_bonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
+        refBonuses.push(20);
     }
 
-
-    /**
-     ###################################################################################
-     ##############################    Public          #################################
-     ###################################################################################
-     */
     function deposit(address _upline, uint256 _amount)  public {
         _setUpline(msg.sender, _upline);
         _deposit(msg.sender, _amount);
-        WDX.transferFrom(msg.sender, address(this), _amount);
+        wdxToken.transferFrom(msg.sender, address(this), _amount);
     }
 
 
-    function withdraw() public {
-        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
+    function withdraw(uint256 _amount) public {
+        require(_amount <= users[msg.sender].depositAmount, "WordLexStaking:incorrect amount, try less");
+
+        (uint256 toPayout, uint256 maxPayout) = this.payoutOf(msg.sender, _amount);
+        if (toPayout >= _amount) {
+            toPayout == _amount;
+        }
+
         require(users[msg.sender].withdrawTime.add(7 days) < block.timestamp,
                 "WordLexStaking: Less than 7 days have passed since the last withdrawal");
 
-        if(to_payout > 0) {
-            if(users[msg.sender].payouts.add(to_payout)  > max_payout) {
-                to_payout = max_payout.sub(users[msg.sender].payouts);
+        if(toPayout > 0) {
+            if(users[msg.sender].payouts.add(toPayout) > maxPayout) {
+                toPayout = maxPayout.sub(users[msg.sender].payouts);
             }
-            users[msg.sender].depositPayouts += to_payout;
-            users[msg.sender].payouts += to_payout;
-            _refPayout(msg.sender, to_payout);
+            users[msg.sender].depositPayouts += toPayout;
+            users[msg.sender].payouts += toPayout;
+            _refPayout(msg.sender, toPayout);
         }
 
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].matchBonus > 0) {
+        if(users[msg.sender].payouts < maxPayout && users[msg.sender].matchBonus > 0) {
             uint256 matchBonus = users[msg.sender].matchBonus;
 
-            if(users[msg.sender].payouts.add(matchBonus) > max_payout) {
-                matchBonus = max_payout.sub(users[msg.sender].payouts);
+            if(users[msg.sender].payouts.add(matchBonus) > maxPayout) {
+                matchBonus = maxPayout.sub(users[msg.sender].payouts);
             }
 
             users[msg.sender].matchBonus -= matchBonus;
             users[msg.sender].payouts += matchBonus;
-            to_payout += matchBonus;
+            toPayout += matchBonus;
         }
-        require(to_payout > 0, "WordLexStaking: Zero payout");
 
-        users[msg.sender].totalPayouts += to_payout;
-        total_withdraw += to_payout;
+        require(toPayout > 0, "WordLexStaking: Zero payout");
+
+        users[msg.sender].totalPayouts += toPayout;
+        totalWithdraw += toPayout;
         users[msg.sender].withdrawTime = block.timestamp;
-        WDX.transfer(msg.sender, to_payout);
+        users[msg.sender].depositAmount -= _amount;
 
-        emit Withdraw(msg.sender, to_payout);
-        if(users[msg.sender].payouts >= max_payout) {
-            emit LimitReached(msg.sender, users[msg.sender].payouts);
-        }
+        wdxToken.transfer(msg.sender, toPayout);
+        emit Withdraw(msg.sender, toPayout);
     }
 
 
-    /**
-    ###################################################################################
-    ##############################     Internal       #################################
-    ###################################################################################
-    */
-    function _setUpline(address _addr, address _upline) internal {
-        if(users[_addr].upline == address(0) && _upline != _addr
-            && _addr != owner() && (users[_upline].depositTime > 0 || _upline == owner())) {
-            users[_addr].upline = _upline;
-            users[_upline].referrals++;
-
-            emit Upline(_addr, _upline);
-            total_users++;
-
-            for(uint8 i = 0; i < ref_bonuses.length; i++) {
-                if(_upline == address(0)) break;
-                users[_upline].totalStructure++;
-                _upline = users[_upline].upline;
-            }
-        }
-    }
-
-
-    function _deposit(address _addr, uint256 _amount) internal {
-        require(users[_addr].upline != address(0) || _addr == owner(), "WordLexStaking: No upLine");
-
-        users[_addr].payouts = 0;
-        users[_addr].depositAmount = users[_addr].depositAmount.add(_amount);
-        users[_addr].depositPayouts = 0;
-        if (users[_addr].depositTime == 0) {
-            users[_addr].depositTime = uint40(block.timestamp);
-        }
-        users[_addr].totalDeposits += _amount;
-
-        total_deposited += _amount;
-        emit NewDeposit(_addr, _amount);
-    }
-
-
-    function _refPayout(address _addr, uint256 _amount) internal {
-        address up = users[_addr].upline;
-        require(ref_bonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)),
-                                            "WordLexStaking: Unavailable lines, please, Update status");
-
-        for(uint8 i = 0; i < ref_bonuses.length; i++) {
-            if(up == address(0)) break;
-
-            if(users[up].referrals >= i + 1) {
-                uint256 bonus = _amount.mul(ref_bonuses[i]).div(100);
-                users[up].matchBonus += bonus;
-                emit MatchPayout(up, _addr, bonus);
-            }
-            up = users[up].upline;
-        }
-    }
-
-
-    /**
-    ###################################################################################
-    ##############################  Геттеры ###########################################
-    ###################################################################################
-    */
     function maxDailyPayoutOf(address _statusHolder)public view returns(uint256) {
         return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
     }
 
 
-    function payoutOf(address _addr) public view returns(uint256 payout, uint256 max_payout) {
-        max_payout = this.maxDailyPayoutOf(_addr);
-        if(users[_addr].depositPayouts < max_payout) {
+    function payoutOf(address _addr, uint256 _amount) public view returns(uint256 payout, uint256 maxPayout) {
+        maxPayout = this.maxDailyPayoutOf(_addr);
 
-            payout = (users[_addr].depositAmount.mul(
-                (block.timestamp.sub(users[_addr].depositTime)).div(1 days)
-                ).mul(getDailyPercent(_addr)).div(1000)).sub(users[_addr].depositPayouts);
+        if(_amount < maxPayout) {
 
-            if(users[_addr].depositPayouts.add(payout) > max_payout) {
-                payout = max_payout.sub(users[_addr].depositPayouts);
+            payout = generateCompoundInterest(_addr, _amount);
+
+            if(users[_addr].depositPayouts.add(payout) > maxPayout) {
+                payout = maxPayout.sub(users[_addr].depositPayouts);
             }
         }
     }
@@ -248,10 +183,72 @@ contract WordLexStaking is Ownable{
     }
 
 
-    function contractInfo()public view  returns(uint256 _total_users,
-                                                uint256 _total_deposited,
-                                                uint256 _total_withdraw) {
-        return (total_users, total_deposited, total_withdraw);
+    function contractInfo()public view  returns(uint256 _totalUsers,
+                                                uint256 _totalDeposited,
+                                                uint256 _totalWithdraw) {
+        return (totalUsers, totalDeposited, totalWithdraw);
+    }
+
+
+    function generateCompoundInterest(address _addr, uint256 amount) public view returns(uint256) {
+        uint256 accAmount = amount;
+        uint256 accDay = uint40(block.timestamp).div(users[_addr].depositTime);
+        uint256 currentPercent = getDailyPercent(_addr);
+
+        for (uint256 i = 0; i < accDay; i++) {
+            accAmount = accAmount.mul(currentPercent).div(1000);  // на каждой итерации получаем общую сумму бонусов и умножаем ее на процент
+        }
+        return accAmount;
+    }
+
+
+    function _setUpline(address _addr, address _upline) internal {
+        if(users[_addr].upline == address(0) && _upline != _addr
+            && _addr != owner() && (users[_upline].depositTime > 0 || _upline == owner())) {
+            users[_addr].upline = _upline;
+            users[_upline].referrals++;
+
+            emit Upline(_addr, _upline);
+            totalUsers++;
+
+            for(uint8 i = 0; i < refBonuses.length; i++) {
+                if(_upline == address(0)) break;
+                users[_upline].totalStructure++;
+                _upline = users[_upline].upline;
+            }
+        }
+    }
+
+
+    function _deposit(address _addr, uint256 _amount) internal {
+        require(users[_addr].upline != address(0) || _addr == owner(), "WordLexStaking: No upLine");
+        users[_addr].depositAmount = users[_addr].depositAmount.add(_amount);
+
+        if (users[_addr].depositTime == 0) {
+            users[_addr].depositTime = uint40(block.timestamp);
+        }
+
+        users[_addr].totalDeposits += _amount;
+        totalDeposited += _amount;
+        emit NewDeposit(_addr, _amount);
+    }
+
+
+    function _refPayout(address _addr, uint256 _amount) internal {
+        address up = users[_addr].upline;
+        require(refBonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)),
+                                            "WordLexStaking: Unavailable lines, please, Update status");
+
+        for(uint8 i = 0; i < refBonuses.length; i++) {
+            if(up == address(0)) break;
+
+            if(users[up].referrals >= i + 1) {
+                uint256 bonus = _amount.mul(refBonuses[i]).div(100);
+                users[up].matchBonus += bonus;
+                emit MatchPayout(up, _addr, bonus);
+            }
+            up = users[up].upline;
+        }
     }
 
 }

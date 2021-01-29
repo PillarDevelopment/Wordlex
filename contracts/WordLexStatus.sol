@@ -74,9 +74,9 @@ contract WordLexStatus is Ownable {
 
     function buyStatus(uint40 _id, address payable _upLiner) public payable {
 
-        require(msg.value == getStatusPrice(_id), "WDX Status: Bad Amount");
-        require(users[msg.sender].status == 0, "WDX Status: Status already bought, please, upgrade");
-        require(_upLiner != address(0) && users[_upLiner].status > 0, "WDX Status: UpLiner doesn't exist");
+        require(msg.value == getStatusPrice(_id), "WDXStatus:Bad Amount");
+        require(users[msg.sender].status == 0, "WDXStatus:Status already bought");
+        require(_upLiner != address(0) && users[_upLiner].status > 0, "WDXStatus: UpLiner doesn't exist");
 
         users[msg.sender].status = _id;
         _setUpline(msg.sender, _upLiner);
@@ -98,8 +98,8 @@ contract WordLexStatus is Ownable {
 
 
     function upgradeStatus(uint40 _id) public payable {
-        require(users[msg.sender].status > 0, "WDXStatus:Status can't upgrade, please, buy");
-        require(users[msg.sender].status < _id, "WDXStatus: You can't specify the status below");
+        require(users[msg.sender].status > 0, "WDXStatus:Need buy Status");
+        require(users[msg.sender].status < _id, "WDXStatus:Invalid id");
         require(msg.value == getStatusPrice(_id).sub(getStatusPrice(users[msg.sender].status)), "WDXStatus:Bad Amount");
         users[msg.sender].status = _id;
     }
@@ -144,7 +144,7 @@ contract WordLexStatus is Ownable {
 
 
     function setAdminAddress(address payable _newAdmin) public {
-        require(msg.sender == owner(), "WDXStatus:Sender isn't current owner");
+        require(msg.sender == owner(), "WDXStatus:Sender isn't owner");
         admin = _newAdmin;
     }
 
@@ -163,7 +163,7 @@ contract WordLexStatus is Ownable {
 
     function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upline;
-        require(refBonuses.length <= getAddressStatus(_addr), "WDX Status: Unavailable lines, please, update status");
+        require(refBonuses.length <= getAddressStatus(_addr), "WDXStatus:Unavailable lines");
 
         for(uint8 i = 0; i < refBonuses.length; i++) {
             if(up == address(0)) break;
@@ -195,10 +195,10 @@ contract WordLexStatus is Ownable {
     }
 
 
-    function setRefBonusesPercentage(uint256 line, uint256 newAmount) public {
-        require(msg.sender == admin, "WDX Status: address isn't admin");
-        require(refBonuses.length > line, "WDX Status: unavailable line");
-        refBonuses[line] - newAmount;
+    function setRefBonusesPercentage(uint256 line, uint8 newAmount) public {
+        require(msg.sender == admin, "WDXStatus:address isn't admin");
+        require(refBonuses.length > line, "WDXStatus:unavailable line");
+        refBonuses[line] = newAmount;
     }
 
 }
