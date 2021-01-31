@@ -1,0 +1,380 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [  <!ENTITY quot "&#34;">  <!ENTITY amp "&#38;">  <!ENTITY apos "&#39;">  <!ENTITY lt "&#60;">  <!ENTITY gt "&#62;">  <!ENTITY nbsp "&#160;">  <!ENTITY iexcl "&#161;">  <!ENTITY cent "&#162;">  <!ENTITY pound "&#163;">  <!ENTITY curren "&#164;">  <!ENTITY yen "&#165;">  <!ENTITY brvbar "&#166;">  <!ENTITY sect "&#167;">  <!ENTITY uml "&#168;">  <!ENTITY copy "&#169;">  <!ENTITY ordf "&#170;">  <!ENTITY laquo "&#171;">  <!ENTITY not "&#172;">  <!ENTITY shy "&#173;">  <!ENTITY reg "&#174;">  <!ENTITY macr "&#175;">  <!ENTITY deg "&#176;">  <!ENTITY plusmn "&#177;">  <!ENTITY sup2 "&#178;">  <!ENTITY sup3 "&#179;">  <!ENTITY acute "&#180;">  <!ENTITY micro "&#181;">  <!ENTITY para "&#182;">  <!ENTITY middot "&#183;">  <!ENTITY cedil "&#184;">  <!ENTITY sup1 "&#185;">  <!ENTITY ordm "&#186;">  <!ENTITY raquo "&#187;">  <!ENTITY frac14 "&#188;">  <!ENTITY frac12 "&#189;">  <!ENTITY frac34 "&#190;">  <!ENTITY iquest "&#191;">  <!ENTITY Agrave "&#192;">  <!ENTITY Aacute "&#193;">  <!ENTITY Acirc "&#194;">  <!ENTITY Atilde "&#195;">  <!ENTITY Auml "&#196;">  <!ENTITY Aring "&#197;">  <!ENTITY AElig "&#198;">  <!ENTITY Ccedil "&#199;">  <!ENTITY Egrave "&#200;">  <!ENTITY Eacute "&#201;">  <!ENTITY Ecirc "&#202;">  <!ENTITY Euml "&#203;">  <!ENTITY Igrave "&#204;">  <!ENTITY Iacute "&#205;">  <!ENTITY Icirc "&#206;">  <!ENTITY Iuml "&#207;">  <!ENTITY ETH "&#208;">  <!ENTITY Ntilde "&#209;">  <!ENTITY Ograve "&#210;">  <!ENTITY Oacute "&#211;">  <!ENTITY Ocirc "&#212;">  <!ENTITY Otilde "&#213;">  <!ENTITY Ouml "&#214;">  <!ENTITY times "&#215;">  <!ENTITY Oslash "&#216;">  <!ENTITY Ugrave "&#217;">  <!ENTITY Uacute "&#218;">  <!ENTITY Ucirc "&#219;">  <!ENTITY Uuml "&#220;">  <!ENTITY Yacute "&#221;">  <!ENTITY THORN "&#222;">  <!ENTITY szlig "&#223;">  <!ENTITY agrave "&#224;">  <!ENTITY aacute "&#225;">  <!ENTITY acirc "&#226;">  <!ENTITY atilde "&#227;">  <!ENTITY auml "&#228;">  <!ENTITY aring "&#229;">  <!ENTITY aelig "&#230;">  <!ENTITY ccedil "&#231;">  <!ENTITY egrave "&#232;">  <!ENTITY eacute "&#233;">  <!ENTITY ecirc "&#234;">  <!ENTITY euml "&#235;">  <!ENTITY igrave "&#236;">  <!ENTITY iacute "&#237;">  <!ENTITY icirc "&#238;">  <!ENTITY iuml "&#239;">  <!ENTITY eth "&#240;">  <!ENTITY ntilde "&#241;">  <!ENTITY ograve "&#242;">  <!ENTITY oacute "&#243;">  <!ENTITY ocirc "&#244;">  <!ENTITY otilde "&#245;">  <!ENTITY ouml "&#246;">  <!ENTITY divide "&#247;">  <!ENTITY oslash "&#248;">  <!ENTITY ugrave "&#249;">  <!ENTITY uacute "&#250;">  <!ENTITY ucirc "&#251;">  <!ENTITY uuml "&#252;">  <!ENTITY yacute "&#253;">  <!ENTITY thorn "&#254;">  <!ENTITY yuml "&#255;">  <!ENTITY OElig "&#338;">  <!ENTITY oelig "&#339;">  <!ENTITY Scaron "&#352;">  <!ENTITY scaron "&#353;">  <!ENTITY Yuml "&#376;">  <!ENTITY fnof "&#402;">  <!ENTITY circ "&#710;">  <!ENTITY tilde "&#732;">  <!ENTITY Alpha "&#913;">  <!ENTITY Beta "&#914;">  <!ENTITY Gamma "&#915;">  <!ENTITY Delta "&#916;">  <!ENTITY Epsilon "&#917;">  <!ENTITY Zeta "&#918;">  <!ENTITY Eta "&#919;">  <!ENTITY Theta "&#920;">  <!ENTITY Iota "&#921;">  <!ENTITY Kappa "&#922;">  <!ENTITY Lambda "&#923;">  <!ENTITY Mu "&#924;">  <!ENTITY Nu "&#925;">  <!ENTITY Xi "&#926;">  <!ENTITY Omicron "&#927;">  <!ENTITY Pi "&#928;">  <!ENTITY Rho "&#929;">  <!ENTITY Sigma "&#931;">  <!ENTITY Tau "&#932;">  <!ENTITY Upsilon "&#933;">  <!ENTITY Phi "&#934;">  <!ENTITY Chi "&#935;">  <!ENTITY Psi "&#936;">  <!ENTITY Omega "&#937;">  <!ENTITY alpha "&#945;">  <!ENTITY beta "&#946;">  <!ENTITY gamma "&#947;">  <!ENTITY delta "&#948;">  <!ENTITY epsilon "&#949;">  <!ENTITY zeta "&#950;">  <!ENTITY eta "&#951;">  <!ENTITY theta "&#952;">  <!ENTITY iota "&#953;">  <!ENTITY kappa "&#954;">  <!ENTITY lambda "&#955;">  <!ENTITY mu "&#956;">  <!ENTITY nu "&#957;">  <!ENTITY xi "&#958;">  <!ENTITY omicron "&#959;">  <!ENTITY pi "&#960;">  <!ENTITY rho "&#961;">  <!ENTITY sigmaf "&#962;">  <!ENTITY sigma "&#963;">  <!ENTITY tau "&#964;">  <!ENTITY upsilon "&#965;">  <!ENTITY phi "&#966;">  <!ENTITY chi "&#967;">  <!ENTITY psi "&#968;">  <!ENTITY omega "&#969;">  <!ENTITY thetasym "&#977;">  <!ENTITY upsih "&#978;">  <!ENTITY piv "&#982;">  <!ENTITY ensp "&#8194;">  <!ENTITY emsp "&#8195;">  <!ENTITY thinsp "&#8201;">  <!ENTITY zwnj "&#8204;">  <!ENTITY zwj "&#8205;">  <!ENTITY lrm "&#8206;">  <!ENTITY rlm "&#8207;">  <!ENTITY ndash "&#8211;">  <!ENTITY mdash "&#8212;">  <!ENTITY lsquo "&#8216;">  <!ENTITY rsquo "&#8217;">  <!ENTITY sbquo "&#8218;">  <!ENTITY ldquo "&#8220;">  <!ENTITY rdquo "&#8221;">  <!ENTITY bdquo "&#8222;">  <!ENTITY dagger "&#8224;">  <!ENTITY Dagger "&#8225;">  <!ENTITY bull "&#8226;">  <!ENTITY hellip "&#8230;">  <!ENTITY permil "&#8240;">  <!ENTITY prime "&#8242;">  <!ENTITY Prime "&#8243;">  <!ENTITY lsaquo "&#8249;">  <!ENTITY rsaquo "&#8250;">  <!ENTITY oline "&#8254;">  <!ENTITY frasl "&#8260;">  <!ENTITY euro "&#8364;">  <!ENTITY image "&#8465;">  <!ENTITY weierp "&#8472;">  <!ENTITY real "&#8476;">  <!ENTITY trade "&#8482;">  <!ENTITY alefsym "&#8501;">  <!ENTITY larr "&#8592;">  <!ENTITY uarr "&#8593;">  <!ENTITY rarr "&#8594;">  <!ENTITY darr "&#8595;">  <!ENTITY harr "&#8596;">  <!ENTITY crarr "&#8629;">  <!ENTITY lArr "&#8656;">  <!ENTITY uArr "&#8657;">  <!ENTITY rArr "&#8658;">  <!ENTITY dArr "&#8659;">  <!ENTITY hArr "&#8660;">  <!ENTITY forall "&#8704;">  <!ENTITY part "&#8706;">  <!ENTITY exist "&#8707;">  <!ENTITY empty "&#8709;">  <!ENTITY nabla "&#8711;">  <!ENTITY isin "&#8712;">  <!ENTITY notin "&#8713;">  <!ENTITY ni "&#8715;">  <!ENTITY prod "&#8719;">  <!ENTITY sum "&#8721;">  <!ENTITY minus "&#8722;">  <!ENTITY lowast "&#8727;">  <!ENTITY radic "&#8730;">  <!ENTITY prop "&#8733;">  <!ENTITY infin "&#8734;">  <!ENTITY ang "&#8736;">  <!ENTITY and "&#8743;">  <!ENTITY or "&#8744;">  <!ENTITY cap "&#8745;">  <!ENTITY cup "&#8746;">  <!ENTITY int "&#8747;">  <!ENTITY there4 "&#8756;">  <!ENTITY sim "&#8764;">  <!ENTITY cong "&#8773;">  <!ENTITY asymp "&#8776;">  <!ENTITY ne "&#8800;">  <!ENTITY equiv "&#8801;">  <!ENTITY le "&#8804;">  <!ENTITY ge "&#8805;">  <!ENTITY sub "&#8834;">  <!ENTITY sup "&#8835;">  <!ENTITY nsub "&#8836;">  <!ENTITY sube "&#8838;">  <!ENTITY supe "&#8839;">  <!ENTITY oplus "&#8853;">  <!ENTITY otimes "&#8855;">  <!ENTITY perp "&#8869;">  <!ENTITY sdot "&#8901;">  <!ENTITY lceil "&#8968;">  <!ENTITY rceil "&#8969;">  <!ENTITY lfloor "&#8970;">  <!ENTITY rfloor "&#8971;">  <!ENTITY lang "&#9001;">  <!ENTITY rang "&#9002;">  <!ENTITY loz "&#9674;">  <!ENTITY spades "&#9824;">  <!ENTITY clubs "&#9827;">  <!ENTITY hearts "&#9829;">  <!ENTITY diams "&#9830;"> ]><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="680pt" height="1612pt" viewBox="0.00 0.00 680.18 1612.00">
+<g id="graph0" class="graph" transform="translate(4,1608) scale(1)" data-name="G">
+
+<polygon fill="#2e3e56" stroke="transparent" points="-4,4 -4,-1608 676.1793,-1608 676.1793,4 -4,4" style=""></polygon>
+<g id="clust1" class="cluster">
+<title style="">clusterWordLexStatus</title>
+<path fill="#445773" stroke="#445773" d="M20,-286C20,-286 644.6768,-286 644.6768,-286 650.6768,-286 656.6768,-292 656.6768,-298 656.6768,-298 656.6768,-837 656.6768,-837 656.6768,-843 650.6768,-849 644.6768,-849 644.6768,-849 20,-849 20,-849 14,-849 8,-843 8,-837 8,-837 8,-298 8,-298 8,-292 14,-286 20,-286" style=""></path>
+<text text-anchor="middle" x="332.3384" y="-832.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">WordLexStatus</text>
+</g>
+<g id="clust2" class="cluster">
+<title style="">clusterIPriceController</title>
+<path fill="#445773" stroke="#445773" d="M489.0089,-8C489.0089,-8 652.1793,-8 652.1793,-8 658.1793,-8 664.1793,-14 664.1793,-20 664.1793,-20 664.1793,-181 664.1793,-181 664.1793,-187 658.1793,-193 652.1793,-193 652.1793,-193 489.0089,-193 489.0089,-193 483.0089,-193 477.0089,-187 477.0089,-181 477.0089,-181 477.0089,-20 477.0089,-20 477.0089,-14 483.0089,-8 489.0089,-8" style=""></path>
+<text text-anchor="middle" x="570.5941" y="-176.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">IPriceController &nbsp;(iface)</text>
+</g>
+<g id="clust3" class="cluster">
+<title style="">clusterOwnable</title>
+<path fill="#445773" stroke="#445773" d="M47.8941,-857C47.8941,-857 445.0089,-857 445.0089,-857 451.0089,-857 457.0089,-863 457.0089,-869 457.0089,-869 457.0089,-1092 457.0089,-1092 457.0089,-1098 451.0089,-1104 445.0089,-1104 445.0089,-1104 47.8941,-1104 47.8941,-1104 41.8941,-1104 35.8941,-1098 35.8941,-1092 35.8941,-1092 35.8941,-869 35.8941,-869 35.8941,-863 41.8941,-857 47.8941,-857" style=""></path>
+<text text-anchor="middle" x="246.4515" y="-1087.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">Ownable</text>
+</g>
+<g id="clust4" class="cluster">
+<title style="">clusterSafeMath</title>
+<path fill="#445773" stroke="#445773" d="M88.5794,-1112C88.5794,-1112 165.9906,-1112 165.9906,-1112 171.9906,-1112 177.9906,-1118 177.9906,-1124 177.9906,-1124 177.9906,-1447 177.9906,-1447 177.9906,-1453 171.9906,-1459 165.9906,-1459 165.9906,-1459 88.5794,-1459 88.5794,-1459 82.5794,-1459 76.5794,-1453 76.5794,-1447 76.5794,-1447 76.5794,-1124 76.5794,-1124 76.5794,-1118 82.5794,-1112 88.5794,-1112" style=""></path>
+<text text-anchor="middle" x="127.285" y="-1442.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">SafeMath &nbsp;(lib)</text>
+</g>
+<g id="clust5" class="cluster">
+<title style="">cluster_upLiner</title>
+<path fill="#3b4b63" stroke="#e8726d" stroke-dasharray="5,2" d="M324.7674,-201C324.7674,-201 397.8115,-201 397.8115,-201 403.8115,-201 409.8115,-207 409.8115,-213 409.8115,-213 409.8115,-266 409.8115,-266 409.8115,-272 403.8115,-278 397.8115,-278 397.8115,-278 324.7674,-278 324.7674,-278 318.7674,-278 312.7674,-272 312.7674,-266 312.7674,-266 312.7674,-213 312.7674,-213 312.7674,-207 318.7674,-201 324.7674,-201" style=""></path>
+<text text-anchor="middle" x="361.2894" y="-261.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">_upLiner</text>
+</g>
+<g id="clust6" class="cluster">
+<title style="">cluster_amount</title>
+<path fill="#3b4b63" stroke="#e8726d" stroke-dasharray="5,2" d="M547.5941,-201C547.5941,-201 593.5941,-201 593.5941,-201 599.5941,-201 605.5941,-207 605.5941,-213 605.5941,-213 605.5941,-266 605.5941,-266 605.5941,-272 599.5941,-278 593.5941,-278 593.5941,-278 547.5941,-278 547.5941,-278 541.5941,-278 535.5941,-272 535.5941,-266 535.5941,-266 535.5941,-213 535.5941,-213 535.5941,-207 541.5941,-201 547.5941,-201" style=""></path>
+<text text-anchor="middle" x="570.5941" y="-261.4" font-family="Times,serif" font-size="14.00" fill="#f0f0f0" style="">_amount</text>
+</g>
+<g id="clust7" class="cluster">
+<title style="">cluster_01</title>
+<polygon fill="#2e3e56" stroke="#000000" points="53.785,-1467 53.785,-1596 396.2894,-1596 396.2894,-1467 53.785,-1467" style=""></polygon>
+<text text-anchor="middle" x="225.0372" y="-1579.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">Legend</text>
+</g>
+<!-- WordLexStatus.&lt;Constructor&gt; -->
+<g id="node1" class="node" data-name="WordLexStatus.&lt;Constructor&gt;">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-798" rx="67.5419" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-793.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">&lt;Constructor&gt;</text>
+</g>
+<!-- WordLexStatus._setUpline -->
+<g id="node15" class="node" data-name="WordLexStatus._setUpline">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-777" rx="52.7469" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-772.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">_setUpline</text>
+</g>
+<!-- WordLexStatus.&lt;Constructor&gt;&#45;&gt;WordLexStatus._setUpline -->
+<g id="edge1" class="edge" data-name="WordLexStatus.&lt;Constructor&gt;->WordLexStatus._setUpline">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M190.8644,-792.2617C224.7839,-789.2241 266.2355,-785.5121 299.7648,-782.5096" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="300.251,-785.9801 309.899,-781.602 299.6266,-779.008 300.251,-785.9801" style=""></polygon>
+</g>
+<!-- WordLexStatus.buyStatus -->
+<g id="node2" class="node" data-name="WordLexStatus.buyStatus">
+
+<ellipse fill="#ff9797" stroke="#a52a2a" stroke-width="3" cx="126.785" cy="-474" rx="49.257" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-469.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">buyStatus</text>
+</g>
+<!-- WordLexStatus.getStatusPrice -->
+<g id="node6" class="node" data-name="WordLexStatus.getStatusPrice">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-494" rx="66.0646" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-489.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getStatusPrice</text>
+</g>
+<!-- WordLexStatus.buyStatus&#45;&gt;WordLexStatus.getStatusPrice -->
+<g id="edge2" class="edge" data-name="WordLexStatus.buyStatus->WordLexStatus.getStatusPrice">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M174.8064,-478.0956C207.2644,-480.8638 250.7498,-484.5725 287.5637,-487.7122" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="287.4942,-491.2189 297.7555,-488.5814 288.0891,-484.2442 287.4942,-491.2189" style=""></polygon>
+</g>
+<!-- WordLexStatus.buyStatus&#45;&gt;WordLexStatus._setUpline -->
+<g id="edge3" class="edge" data-name="WordLexStatus.buyStatus->WordLexStatus._setUpline">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M176.0871,-474.1453C197.9309,-476.8688 222.1254,-484.0057 237.57,-501 312.7739,-583.7496 200.8627,-665.0485 273.57,-750 280.7887,-758.4343 290.5754,-764.2775 300.9977,-768.3154" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="300.0989,-771.7049 310.6924,-771.5386 302.3074,-765.0624 300.0989,-771.7049" style=""></polygon>
+</g>
+<!-- _upLiner.transfer -->
+<g id="node31" class="node" data-name="_upLiner.transfer">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-227" rx="40.5441" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-222.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">transfer</text>
+</g>
+<!-- WordLexStatus.buyStatus&#45;&gt;_upLiner.transfer -->
+<g id="edge4" class="edge" data-name="WordLexStatus.buyStatus->_upLiner.transfer">
+
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M176.1154,-473.2773C197.6972,-470.3951 221.6684,-463.2919 237.57,-447 289.9973,-393.2863 230.4001,-343.4014 273.57,-282 285.346,-265.2508 304.0091,-252.5178 321.0991,-243.543" style=""></path>
+<polygon fill="#ffffff" stroke="#ffffff" stroke-width="2" points="322.9738,-246.5202 330.378,-238.9421 319.864,-240.2488 322.9738,-246.5202" style=""></polygon>
+</g>
+<!-- WordLexStatus.upgradeStatus -->
+<g id="node3" class="node" data-name="WordLexStatus.upgradeStatus">
+
+<ellipse fill="#ff9797" stroke="#a52a2a" stroke-width="3" cx="126.785" cy="-690" rx="65.991" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-685.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">upgradeStatus</text>
+</g>
+<!-- WordLexStatus.upgradeStatus&#45;&gt;WordLexStatus.getStatusPrice -->
+<g id="edge5" class="edge" data-name="WordLexStatus.upgradeStatus->WordLexStatus.getStatusPrice">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M176.4419,-678.1044C196.96,-673.8473 220.0025,-667.0347 237.57,-654 262.8513,-635.2418 255.5966,-618.8451 273.57,-593 291.9545,-566.5638 314.9778,-538.3751 332.8239,-518.698" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="335.4128,-521.0535 339.6341,-511.3359 330.2742,-516.3001 335.4128,-521.0535" style=""></polygon>
+</g>
+<!-- WordLexStatus.upgradeStatus&#45;&gt;WordLexStatus.getStatusPrice -->
+<g id="edge6" class="edge" data-name="WordLexStatus.upgradeStatus->WordLexStatus.getStatusPrice">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M192.3955,-691.7139C208.2861,-687.9952 224.454,-681.7318 237.57,-672 262.8513,-653.2418 255.5966,-636.8451 273.57,-611 296.1706,-578.5012 325.7815,-543.3541 344.1664,-519.9056" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="347.0642,-521.8792 350.3981,-511.8225 341.5205,-517.6051 347.0642,-521.8792" style=""></polygon>
+</g>
+<!-- WordLexStatus.addStatus -->
+<g id="node4" class="node" data-name="WordLexStatus.addStatus">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-636" rx="48.6733" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-631.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">addStatus</text>
+</g>
+<!-- WordLexStatus.setRefBonusesPercentage -->
+<g id="node5" class="node" data-name="WordLexStatus.setRefBonusesPercentage">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-582" rx="110.5705" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-577.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">setRefBonusesPercentage</text>
+</g>
+<!-- IPriceController.getCurrentUsdRate -->
+<g id="node17" class="node" data-name="IPriceController.getCurrentUsdRate">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="570.5941" cy="-142" rx="85.6705" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-137.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getCurrentUsdRate</text>
+</g>
+<!-- WordLexStatus.getStatusPrice&#45;&gt;IPriceController.getCurrentUsdRate -->
+<g id="edge7" class="edge" data-name="WordLexStatus.getStatusPrice->IPriceController.getCurrentUsdRate">
+
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M370.8321,-476.0493C389.6123,-440.1073 431.7353,-356.3682 457.0089,-282 469.4966,-245.2545 453.9792,-228.2379 477.0089,-197 487.7594,-182.4177 503.6327,-171.0315 519.2655,-162.4973" style=""></path>
+<polygon fill="#ffffff" stroke="#ffffff" stroke-width="2" points="521.1089,-165.485 528.4015,-157.7994 517.9078,-159.2598 521.1089,-165.485" style=""></polygon>
+</g>
+<!-- WordLexStatus.getAddressStatus -->
+<g id="node7" class="node" data-name="WordLexStatus.getAddressStatus">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="570.5941" cy="-629" rx="78.1656" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-624.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getAddressStatus</text>
+</g>
+<!-- WordLexStatus.getStatusUSDPrice -->
+<g id="node8" class="node" data-name="WordLexStatus.getStatusUSDPrice">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="126.785" cy="-528" rx="85.686" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-523.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getStatusUSDPrice</text>
+</g>
+<!-- WordLexStatus.getStatusLimit -->
+<g id="node9" class="node" data-name="WordLexStatus.getStatusLimit">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="126.785" cy="-312" rx="67.8088" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-307.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getStatusLimit</text>
+</g>
+<!-- WordLexStatus.getStatusLimit&#45;&gt;IPriceController.getCurrentUsdRate -->
+<g id="edge8" class="edge" data-name="WordLexStatus.getStatusLimit->IPriceController.getCurrentUsdRate">
+
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M143.4461,-294.3769C168.8978,-268.6076 220.1592,-221.0979 273.57,-197 338.077,-167.8957 417.1084,-154.1923 477.4281,-147.7403" style=""></path>
+<polygon fill="#ffffff" stroke="#ffffff" stroke-width="2" points="478.1095,-151.189 487.7025,-146.6918 477.3988,-144.2252 478.1095,-151.189" style=""></polygon>
+</g>
+<!-- WordLexStatus.getStatusLines -->
+<g id="node10" class="node" data-name="WordLexStatus.getStatusLines">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="126.785" cy="-420" rx="67.7914" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-415.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getStatusLines</text>
+</g>
+<!-- WordLexStatus.getStatusName -->
+<g id="node11" class="node" data-name="WordLexStatus.getStatusName">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="126.785" cy="-366" rx="69.4974" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-361.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">getStatusName</text>
+</g>
+<!-- WordLexStatus.setAdminAddress -->
+<g id="node12" class="node" data-name="WordLexStatus.setAdminAddress">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="361.2894" cy="-723" rx="80.4557" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-718.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">setAdminAddress</text>
+</g>
+<!-- WordLexStatus.owner -->
+<g id="node16" class="node" data-name="WordLexStatus.owner">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="570.5941" cy="-777" rx="35.3334" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-772.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">owner</text>
+</g>
+<!-- WordLexStatus.setAdminAddress&#45;&gt;WordLexStatus.owner -->
+<g id="edge9" class="edge" data-name="WordLexStatus.setAdminAddress->WordLexStatus.owner">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M414.1058,-736.6265C449.7745,-745.8289 496.191,-757.8042 529.1863,-766.3169" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="528.4113,-769.7315 538.9686,-768.8407 530.16,-762.9534 528.4113,-769.7315" style=""></polygon>
+</g>
+<!-- WordLexStatus.withdraw -->
+<g id="node13" class="node" data-name="WordLexStatus.withdraw">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-744" rx="47.51" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-739.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">withdraw</text>
+</g>
+<!-- WordLexStatus._refPayout -->
+<g id="node14" class="node" data-name="WordLexStatus._refPayout">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-629" rx="53.3109" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-624.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">_refPayout</text>
+</g>
+<!-- WordLexStatus.withdraw&#45;&gt;WordLexStatus._refPayout -->
+<g id="edge10" class="edge" data-name="WordLexStatus.withdraw->WordLexStatus._refPayout">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M170.9364,-737.2251C191.766,-733.039 216.5938,-726.5861 237.57,-717 257.0729,-708.0872 301.7599,-674.9573 331.7412,-651.9933" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="333.9818,-654.6856 339.7744,-645.8144 329.714,-649.137 333.9818,-654.6856" style=""></polygon>
+</g>
+<!-- WordLexStatus._refPayout&#45;&gt;WordLexStatus.getAddressStatus -->
+<g id="edge11" class="edge" data-name="WordLexStatus._refPayout->WordLexStatus.getAddressStatus">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M414.9188,-629C435.3873,-629 459.3035,-629 482.1617,-629" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="482.2254,-632.5001 492.2253,-629 482.2253,-625.5001 482.2254,-632.5001" style=""></polygon>
+</g>
+<!-- _amount.mul -->
+<g id="node32" class="node" data-name="_amount.mul">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="570.5941" cy="-227" rx="27" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-222.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">mul</text>
+</g>
+<!-- WordLexStatus._refPayout&#45;&gt;_amount.mul -->
+<g id="edge12" class="edge" data-name="WordLexStatus._refPayout->_amount.mul">
+
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M382.8104,-612.1691C405.6828,-592.8854 440.7454,-559.0061 457.0089,-521 477.9764,-472.0009 448.6316,-327.114 477.0089,-282 490.4353,-260.6546 515.394,-246.597 536.1611,-238.0403" style=""></path>
+<polygon fill="#ffffff" stroke="#ffffff" stroke-width="2" points="537.5786,-241.245 545.65,-234.3818 535.0604,-234.7137 537.5786,-241.245" style=""></polygon>
+</g>
+<!-- WordLexStatus._setUpline&#45;&gt;WordLexStatus.owner -->
+<g id="edge13" class="edge" data-name="WordLexStatus._setUpline->WordLexStatus.owner">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M411.4231,-771.1408C446.6051,-769.8746 493.1922,-769.9582 526.8666,-771.3919" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="526.7171,-774.8887 536.8758,-771.8802 527.0582,-767.897 526.7171,-774.8887" style=""></polygon>
+</g>
+<!-- WordLexStatus._setUpline&#45;&gt;WordLexStatus.owner -->
+<g id="edge14" class="edge" data-name="WordLexStatus._setUpline->WordLexStatus.owner">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M411.4231,-782.8592C446.6051,-784.1254 493.1922,-784.0418 526.8666,-782.6081" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="527.0582,-786.103 536.8758,-782.1198 526.7171,-779.1113 527.0582,-786.103" style=""></polygon>
+</g>
+<!-- IPriceController.setPriceProvider -->
+<g id="node18" class="node" data-name="IPriceController.setPriceProvider">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="570.5941" cy="-88" rx="74.713" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-83.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">setPriceProvider</text>
+</g>
+<!-- IPriceController.updateUsdRate -->
+<g id="node19" class="node" data-name="IPriceController.updateUsdRate">
+
+<ellipse fill="#ffbdb9" stroke="#ffbdb9" stroke-width="3" cx="570.5941" cy="-34" rx="70.0635" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="570.5941" y="-29.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">updateUsdRate</text>
+</g>
+<!-- Ownable.&lt;Constructor&gt; -->
+<g id="node20" class="node" data-name="Ownable.&lt;Constructor&gt;">
+
+<ellipse fill="#f2c383" stroke="#f2c383" stroke-width="3" cx="126.785" cy="-1053" rx="67.5419" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1048.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">&lt;Constructor&gt;</text>
+</g>
+<!-- Ownable.owner -->
+<g id="node21" class="node" data-name="Ownable.owner">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-999" rx="35.3334" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-994.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">owner</text>
+</g>
+<!-- Ownable.onlyOwner -->
+<g id="node22" class="node" data-name="Ownable.onlyOwner">
+
+<polygon fill="#edad56" stroke="#1bc6a6" stroke-width="3" points="185.7209,-933.5442 185.7209,-948.4558 151.197,-959 102.373,-959 67.8492,-948.4558 67.8492,-933.5442 102.373,-923 151.197,-923 185.7209,-933.5442" style=""></polygon>
+<polygon fill="none" stroke="#1bc6a6" stroke-width="3" points="189.7188,-930.583 189.7188,-951.417 151.7936,-963 101.7764,-963 63.8513,-951.417 63.8513,-930.583 101.7764,-919 151.7936,-919 189.7188,-930.583" style=""></polygon>
+<text text-anchor="middle" x="126.785" y="-936.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">onlyOwner</text>
+</g>
+<!-- Ownable.isOwner -->
+<g id="node23" class="node" data-name="Ownable.isOwner">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-941" rx="43.9983" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-936.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">isOwner</text>
+</g>
+<!-- Ownable.onlyOwner&#45;&gt;Ownable.isOwner -->
+<g id="edge15" class="edge" data-name="Ownable.onlyOwner->Ownable.isOwner">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M189.9364,-941C226.6069,-941 272.3197,-941 307.3052,-941" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="307.3331,-944.5001 317.3331,-941 307.3331,-937.5001 307.3331,-944.5001" style=""></polygon>
+</g>
+<!-- Ownable.transferOwnership -->
+<g id="node24" class="node" data-name="Ownable.transferOwnership">
+
+<ellipse fill="#ff9797" stroke="#ff9797" stroke-width="3" cx="126.785" cy="-883" rx="82.782" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-878.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">transferOwnership</text>
+</g>
+<!-- Ownable._transferOwnership -->
+<g id="node25" class="node" data-name="Ownable._transferOwnership">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="361.2894" cy="-883" rx="87.9394" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="361.2894" y="-878.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">_transferOwnership</text>
+</g>
+<!-- Ownable.transferOwnership&#45;&gt;Ownable._transferOwnership -->
+<g id="edge16" class="edge" data-name="Ownable.transferOwnership->Ownable._transferOwnership">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M209.7925,-883C226.9745,-883 245.2318,-883 262.9022,-883" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="263.2259,-886.5001 273.2258,-883 263.2258,-879.5001 263.2259,-886.5001" style=""></polygon>
+</g>
+<!-- SafeMath.add -->
+<g id="node26" class="node" data-name="SafeMath.add">
+
+<ellipse fill="#f2c383" stroke="#f2c383" stroke-width="3" cx="126.785" cy="-1408" rx="27" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1403.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">add</text>
+</g>
+<!-- SafeMath.sub -->
+<g id="node27" class="node" data-name="SafeMath.sub">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="126.785" cy="-1336" rx="27" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1331.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">sub</text>
+</g>
+<!-- SafeMath.sub&#45;&gt;SafeMath.sub -->
+<g id="edge17" class="edge" data-name="SafeMath.sub->SafeMath.sub">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M101.8054,-1343.0682C70.0132,-1355.541 78.3397,-1372 126.785,-1372 169.7424,-1372 181.1556,-1359.0588 161.0245,-1347.4307" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="162.3027,-1344.164 151.7646,-1343.0682 159.3193,-1350.4964 162.3027,-1344.164" style=""></polygon>
+</g>
+<!-- SafeMath.mul -->
+<g id="node28" class="node" data-name="SafeMath.mul">
+
+<ellipse fill="#f2c383" stroke="#f2c383" stroke-width="3" cx="126.785" cy="-1282" rx="27" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1277.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">mul</text>
+</g>
+<!-- SafeMath.div -->
+<g id="node29" class="node" data-name="SafeMath.div">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="126.785" cy="-1210" rx="27" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1205.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">div</text>
+</g>
+<!-- SafeMath.div&#45;&gt;SafeMath.div -->
+<g id="edge18" class="edge" data-name="SafeMath.div->SafeMath.div">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M101.8054,-1217.0682C70.0132,-1229.541 78.3397,-1246 126.785,-1246 169.7424,-1246 181.1556,-1233.0588 161.0245,-1221.4307" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="162.3027,-1218.164 151.7646,-1217.0682 159.3193,-1224.4964 162.3027,-1218.164" style=""></polygon>
+</g>
+<!-- SafeMath.mod -->
+<g id="node30" class="node" data-name="SafeMath.mod">
+
+<ellipse fill="#edad56" stroke="#edad56" stroke-width="3" cx="126.785" cy="-1138" rx="28.4127" ry="18" style=""></ellipse>
+<text text-anchor="middle" x="126.785" y="-1133.8" font-family="Times,serif" font-size="14.00" fill="#000000" style="">mod</text>
+</g>
+<!-- SafeMath.mod&#45;&gt;SafeMath.mod -->
+<g id="edge19" class="edge" data-name="SafeMath.mod->SafeMath.mod">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M100.9163,-1145.4222C70.1738,-1157.8501 78.7967,-1174 126.785,-1174 169.1497,-1174 180.8346,-1161.4134 161.8398,-1149.9128" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="163.1749,-1146.6696 152.6537,-1145.4222 160.1006,-1152.9585 163.1749,-1146.6696" style=""></polygon>
+</g>
+<!-- key -->
+<g id="node33" class="node" data-name="key">
+
+<polygon fill="#edad56" stroke="transparent" stroke-width="3" points="191.785,-1563 61.785,-1563 61.785,-1475 191.785,-1475 191.785,-1563" style=""></polygon>
+<text text-anchor="start" x="111.421" y="-1544.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">Internal Call</text>
+<text text-anchor="start" x="107.529" y="-1524.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">External Call</text>
+<text text-anchor="start" x="84.9904" y="-1504.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">Defined Contract</text>
+<text text-anchor="start" x="71.3877" y="-1484.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">Undefined Contract</text>
+</g>
+<!-- key2 -->
+<g id="node34" class="node" data-name="key2">
+
+<polygon fill="#edad56" stroke="transparent" stroke-width="3" points="388.2894,-1563 334.2894,-1563 334.2894,-1475 388.2894,-1475 388.2894,-1563" style=""></polygon>
+<text text-anchor="start" x="349.0485" y="-1544.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">&nbsp;&nbsp;&nbsp;</text>
+<text text-anchor="start" x="349.0485" y="-1524.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">&nbsp;&nbsp;&nbsp;</text>
+<polygon fill="#445773" stroke="transparent" points="347.2894,-1499 347.2894,-1519 375.2894,-1519 375.2894,-1499 347.2894,-1499" style=""></polygon>
+<text text-anchor="start" x="349.0485" y="-1504.4" font-family="Times,serif" font-size="14.00" fill="#000000" style="">&nbsp;&nbsp;&nbsp;</text>
+<polygon fill="none" stroke="#e8726d" points="349.2894,-1481 349.2894,-1497 373.2894,-1497 373.2894,-1481 349.2894,-1481" style=""></polygon>
+</g>
+<!-- key&#45;&gt;key2 -->
+<g id="edge20" class="edge" data-name="key->key2">
+
+<path fill="none" stroke="#1bc6a6" stroke-width="2" d="M183.785,-1549C252.9054,-1549 272.7167,-1549 337.0218,-1549" style=""></path>
+<polygon fill="#1bc6a6" stroke="#1bc6a6" stroke-width="2" points="337.2895,-1552.5001 347.2894,-1549 337.2894,-1545.5001 337.2895,-1552.5001" style=""></polygon>
+</g>
+<!-- key&#45;&gt;key2 -->
+<g id="edge21" class="edge" data-name="key->key2">
+
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M183.785,-1529C252.9054,-1529 272.7167,-1529 337.0218,-1529" style=""></path>
+<polygon fill="#ffffff" stroke="#ffffff" stroke-width="2" points="337.2895,-1532.5001 347.2894,-1529 337.2894,-1525.5001 337.2895,-1532.5001" style=""></polygon>
+</g>
+</g>
+</svg>
