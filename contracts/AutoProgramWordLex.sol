@@ -18,14 +18,12 @@ contract AutoProgramWordLex is Ownable {
         uint256 direct_bonus;
         uint256 match_bonus;
         uint256 deposit_amount;
-        uint256 deposit_payouts;
         uint40 deposit_time;
-        uint256 total_deposits;
-        uint256 total_payouts;
         uint256 total_structure;
         uint256 carPrice;
         bool statusOfCar;
         bool activeAccount;
+        bool licence;
         uint256[] firstLineIds;
     }
 
@@ -89,49 +87,20 @@ contract AutoProgramWordLex is Ownable {
 
 
     function withdraw() public {
+        require(users[msg.sender].activeAccount ||
+            (users[msg.sender].deposit_time.add(180 days) < block.timestamp && getsBuyersIn1Line(msg.sender) > 1),
+               "AutoProgramWDX: You need to buy a car or your referrals need buy a car");
 
-        (uint256 to_payout, uint256 max_payout) = this.payoutOf(msg.sender);
+        _refPayout(msg.sender, users[msg.sender].deposit_amount);
+        uint256 match_bonus = users[msg.sender].match_bonus;
 
-      //  if(users[msg.sender].direct_bonus >= users[msg.sender].carPrice.mul(3)) {
-        //todo  users[msg.sender].carPriceInWDX >= carPriceInWDX его 3х из первой линии * 3
-      //      users[msg.sender].statusOfCar = true;
-      //  }
-
-        require(users[msg.sender].deposit_time.add(180 days) < block.timestamp
-            || users[msg.sender].statusOfCar == true,
-                                "AutoProgramWDX: Less than 6 months have passed since the last car Sell");
-
-        if(to_payout > 0) {
-            if(users[msg.sender].payouts.add(to_payout) > max_payout) {
-                to_payout = max_payout.sub(users[msg.sender].payouts);
-            }
-
-            users[msg.sender].deposit_payouts += to_payout;
-            users[msg.sender].payouts += to_payout;
-            _refPayout(msg.sender, to_payout);
-        }
-
-        if(users[msg.sender].payouts < max_payout && users[msg.sender].match_bonus > 0) {
-            uint256 match_bonus = users[msg.sender].match_bonus;
-
-            if(users[msg.sender].payouts.add(match_bonus)  > max_payout) {
-                match_bonus = max_payout.sub(users[msg.sender].payouts);
-            }
-            users[msg.sender].match_bonus -= match_bonus;
-            users[msg.sender].payouts += match_bonus;
-            to_payout += match_bonus;
-        }
-
-        require(to_payout > 0, "AutoProgramWDX: Zero payout");
-        users[msg.sender].total_payouts += to_payout;
-        totalWithdraw += to_payout;
-
-        WDXToken.transfer(msg.sender, to_payout);
-
-        emit Withdraw(msg.sender, to_payout);
-        if(users[msg.sender].payouts >= max_payout) {
-            emit LimitReached(msg.sender, users[msg.sender].payouts);
-        }
+        users[msg.sender].match_bonus = 0;
+        uint256 currentWithdraw = match_bonus.add(users[msg.sender].deposit_amount);
+        users[msg.sender].payouts = users[msg.sender].payouts.add(currentWithdraw);
+        totalWithdraw += totalWithdraw.add(currentWithdraw);
+        users[msg.sender].deposit_amount = 0;
+        WDXToken.transfer(msg.sender, currentWithdraw);
+        emit Withdraw(msg.sender, currentWithdraw);
     }
 
 
@@ -151,6 +120,15 @@ contract AutoProgramWordLex is Ownable {
                 }
             }
         }
+    }
+
+
+    function checkThreeComrades(address _first, address _second, address _third) public {
+        require(users[_first].carPrice == users[msg.sender].carPrice,"AutoProgramWDX:Incorrect Price to 1 comrade");
+        require(users[_second].carPrice == users[msg.sender].carPrice,"AutoProgramWDX:Incorrect Price to 2 comrade");
+        require(users[_third].carPrice == users[msg.sender].carPrice,"AutoProgramWDX:Incorrect Price to 3 comrade");
+
+        users[msg.sender].licence = true;
     }
 
 
@@ -197,7 +175,6 @@ contract AutoProgramWordLex is Ownable {
         if (users[_addr].deposit_time == 0) {
             users[_addr].deposit_time = uint40(block.timestamp);
         }
-        users[_addr].total_deposits = users[_addr].total_deposits.add(_amount);
 
         totalDeposited = totalDeposited.add(_amount);
         emit NewDeposit(_addr, _amount);
@@ -212,11 +189,8 @@ contract AutoProgramWordLex is Ownable {
     function _refPayout(address _addr, uint256 _amount) internal {
         address up = users[_addr].upLine;
 
-        require(refBonuses.length <= statusContract.getStatusLines(statusContract.getAddressStatus(_addr)),
-                                                "AutoProgramWDX: Unavailable lines, please, update status");
-
-        for(uint8 i = 0; i < refBonuses.length; i++) {
-            if(up == address(0)) break;
+        for(uint8 i = 0; i < statusContract.getStatusLines(statusContract.getAddressStatus(_addr)); i++) {
+            //if(up == address(0)) break;
 
             if(users[up].referrals >= i + 1) {
                 uint256 bonus = _amount.mul(refBonuses[i].div(1000)); // 0,4% every line
@@ -229,53 +203,6 @@ contract AutoProgramWordLex is Ownable {
     }
 
 
-    function maxDailyPayoutOf(address _addr)public view returns(uint256) {
-        return statusContract.getStatusLimit(statusContract.getAddressStatus(_addr));
-    }
-
-
-    function payoutOf(address _addr)public view returns(uint256 payout, uint256 max_payout) {
-        max_payout = this.maxDailyPayoutOf(_addr);
-
-        if(users[_addr].deposit_payouts < max_payout) {
-
-            payout = (users[_addr].deposit_amount.mul(
-                (block.timestamp.sub(users[_addr].deposit_time).div(1 days)
-                    ).div(1000)).sub(users[_addr].deposit_payouts));
-
-            if(users[_addr].deposit_payouts.add(payout)  > max_payout) {
-                payout = max_payout.sub(users[_addr].deposit_payouts);
-            }
-        }
-    }
-
-
-    function userInfo(address _addr) public view returns(address upline,
-                                                        uint40 deposit_time,
-                                                        uint256 deposit_amount,
-                                                        uint256 payouts,
-                                                        uint256 match_bonus,
-                                                        bool statusOfCar) {
-        return (users[_addr].upLine,
-                users[_addr].deposit_time,
-                users[_addr].deposit_amount,
-                users[_addr].payouts,
-                users[_addr].match_bonus,
-                users[_addr].statusOfCar);
-    }
-
-
-    function userInfoTotals(address _addr)public view returns(uint256 referrals,
-                                                              uint256 total_deposits,
-                                                              uint256 total_payouts,
-                                                              uint256 total_structure) {
-        return (users[_addr].referrals,
-                users[_addr].total_deposits,
-                users[_addr].total_payouts,
-                users[_addr].total_structure);
-    }
-
-
     function contractInfo()public view returns(uint256 _totalUsers, uint256 _totalDeposited, uint256 _totalWithdraw) {
         return (totalUsers, totalDeposited, totalWithdraw);
     }
@@ -284,6 +211,15 @@ contract AutoProgramWordLex is Ownable {
     function setUserCarPrice(address _addr, uint256 _newCarPrice) public onlyOwner {
         require(_newCarPrice != 0, "AutoProgramWDX: Unavailable price");
         users[_addr].carPrice = _newCarPrice;
+    }
+
+
+    function getsBuyersIn1Line(address _addr) public view returns(uint256 counter) {
+        for(uint256 i = 0; i < users[_addr].firstLineIds.length; i++) {
+            if (users[ids[users[_addr].firstLineIds[i]]].statusOfCar) {
+                counter++;
+            }
+        }
     }
 
 }
