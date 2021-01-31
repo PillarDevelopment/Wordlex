@@ -97,6 +97,12 @@ contract WordLexStaking is Ownable{
     }
 
 
+    function setRefBonusesPercentage(uint256 line, uint8 newAmount) public onlyOwner{
+        require(refBonuses.length > line, "WordLexStaking:unavailable line");
+        refBonuses[line] = newAmount;
+    }
+
+
     function maxDailyPayoutOf(address _statusHolder)public view returns(uint256) {
         return statusContract.getStatusLimit(statusContract.getAddressStatus(_statusHolder));
     }

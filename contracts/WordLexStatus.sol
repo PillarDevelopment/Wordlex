@@ -113,6 +113,13 @@ contract WordLexStatus is Ownable {
     }
 
 
+    function setRefBonusesPercentage(uint256 line, uint8 newAmount) public {
+        require(msg.sender == admin, "WDXStatus:address isn't admin");
+        require(refBonuses.length > line, "WDXStatus:unavailable line");
+        refBonuses[line] = newAmount;
+    }
+
+
     function getStatusPrice(uint256 _statusId) public view returns(uint256) {
         return statuses[_statusId].usdPrice.mul(controller.getCurrentUsdRate());
     }
@@ -192,13 +199,6 @@ contract WordLexStatus is Ownable {
                 _upline = users[_upline].upline;
             }
         }
-    }
-
-
-    function setRefBonusesPercentage(uint256 line, uint8 newAmount) public {
-        require(msg.sender == admin, "WDXStatus:address isn't admin");
-        require(refBonuses.length > line, "WDXStatus:unavailable line");
-        refBonuses[line] = newAmount;
     }
 
 }
