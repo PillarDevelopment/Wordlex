@@ -5,13 +5,15 @@ import "./Ownable.sol";
 import "./IPriceController.sol";
 
 contract PriceController is IPriceController, Ownable {
-
     address public priceProvider;
 
     uint256 private currentUsdRate;
 
     modifier onlyPriceProvider() {
-        require(msg.sender == priceProvider, "PriceController: caller is not the priceProvider");
+        require(
+            msg.sender == priceProvider,
+            "PriceController: caller is not the priceProvider"
+        );
         _;
     }
 
@@ -27,9 +29,7 @@ contract PriceController is IPriceController, Ownable {
         currentUsdRate = _newRate;
     }
 
-
-    function getCurrentUsdRate() external view returns(uint256) {
+    function getCurrentUsdRate() external view returns (uint256) {
         return currentUsdRate;
     }
-
 }

@@ -1,5 +1,36 @@
 {
   "dependencies": {
     "solhint": "^3.3.2"
+  },
+  "name": "wordlex",
+  "description": "[Official webSite](https://www.wordlex.finance/)",
+  "version": "1.0.0",
+  "main": "tronbox-config.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol",
+    "solhint": "./node_modules/.bin/solhint -f table contracts/**/*.sol",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PillarDevelopment/Wordlex.git"
+  },
+  "keywords": [
+    "wordlex"
+  ],
+  "author": "Ivan Borisov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PillarDevelopment/Wordlex/issues"
+  },
+  "homepage": "https://github.com/PillarDevelopment/Wordlex#readme",
+  "devDependencies": {
+    "prettier": "^1.19.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.4",
+    "solhint-plugin-prettier": "^0.0.5"
   }
 }
